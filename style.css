@@ -327,6 +327,17 @@ button {
     font-weight: 700;
     text-align: right;
 }
+.hp-fill.hp-high {
+    background: var(--hp-green);
+}
+
+.hp-fill.hp-medium {
+    background: var(--hp-yellow);
+}
+
+.hp-fill.hp-low {
+    background: var(--hp-red);
+}
 
 /* ------------------------------
    Sprite Platforms
