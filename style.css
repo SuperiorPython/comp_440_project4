@@ -1,6 +1,6 @@
 /* ------------------------------
-   Pocket Clash - Commit 1
-   Battle screen layout and styling
+   Pocket Clash - Commit 2
+   Dynamic battle screen styling
 ------------------------------ */
 
 :root {
@@ -38,8 +38,16 @@ body {
     display: grid;
     place-items: center;
     background:
-        radial-gradient(circle at top, #253b6a 0%, transparent 42%),
-        linear-gradient(160deg, #111a30 0%, #090f1f 100%);
+        radial-gradient(
+            circle at top,
+            #253b6a 0%,
+            transparent 42%
+        ),
+        linear-gradient(
+            160deg,
+            #111a30 0%,
+            #090f1f 100%
+        );
     color: var(--text-dark);
     font-family: Arial, Helvetica, sans-serif;
 }
@@ -63,6 +71,10 @@ button {
     border-radius: 24px;
     box-shadow: var(--shadow);
 }
+
+/* ------------------------------
+   Header
+------------------------------ */
 
 .game-header {
     min-height: 92px;
@@ -114,6 +126,10 @@ button {
     transform: translateY(1px);
 }
 
+/* ------------------------------
+   Battle Arena
+------------------------------ */
+
 .battle-screen {
     position: relative;
     min-height: 540px;
@@ -137,18 +153,41 @@ button {
 
 .sky-layer {
     background:
-        radial-gradient(circle at 78% 16%, rgba(255, 255, 255, 0.9) 0 6%, transparent 6.5%),
-        linear-gradient(#8eddf4 0 58%, #b9e88b 58% 100%);
+        radial-gradient(
+            circle at 78% 16%,
+            rgba(255, 255, 255, 0.9) 0 6%,
+            transparent 6.5%
+        ),
+        linear-gradient(
+            #8eddf4 0 58%,
+            #b9e88b 58% 100%
+        );
 }
 
 .far-hills {
     top: 36%;
     height: 35%;
     background:
-        radial-gradient(ellipse at 10% 100%, #5da15c 0 37%, transparent 38%),
-        radial-gradient(ellipse at 35% 100%, #5c9a57 0 42%, transparent 43%),
-        radial-gradient(ellipse at 68% 100%, #6ba85f 0 38%, transparent 39%),
-        radial-gradient(ellipse at 95% 100%, #4f9353 0 44%, transparent 45%);
+        radial-gradient(
+            ellipse at 10% 100%,
+            #5da15c 0 37%,
+            transparent 38%
+        ),
+        radial-gradient(
+            ellipse at 35% 100%,
+            #5c9a57 0 42%,
+            transparent 43%
+        ),
+        radial-gradient(
+            ellipse at 68% 100%,
+            #6ba85f 0 38%,
+            transparent 39%
+        ),
+        radial-gradient(
+            ellipse at 95% 100%,
+            #4f9353 0 44%,
+            transparent 45%
+        );
     opacity: 0.95;
 }
 
@@ -160,7 +199,10 @@ button {
             rgba(255, 255, 255, 0.08) 0 14px,
             rgba(0, 0, 0, 0.03) 14px 28px
         ),
-        linear-gradient(#7fc85e, #579546);
+        linear-gradient(
+            #7fc85e,
+            #579546
+        );
 }
 
 .combatant {
@@ -178,6 +220,10 @@ button {
     bottom: 30px;
     height: 245px;
 }
+
+/* ------------------------------
+   Status Cards
+------------------------------ */
 
 .status-card {
     position: absolute;
@@ -269,7 +315,9 @@ button {
     height: 100%;
     background: var(--hp-green);
     border-radius: inherit;
-    transition: width 350ms ease;
+    transition:
+        width 350ms ease,
+        background 350ms ease;
 }
 
 .hp-text {
@@ -279,6 +327,10 @@ button {
     font-weight: 700;
     text-align: right;
 }
+
+/* ------------------------------
+   Sprite Platforms
+------------------------------ */
 
 .sprite-platform {
     position: absolute;
@@ -301,6 +353,10 @@ button {
     bottom: 2px;
 }
 
+/* ------------------------------
+   Base Monster Sprite
+------------------------------ */
+
 .monster-sprite {
     position: absolute;
     left: 50%;
@@ -308,7 +364,9 @@ button {
     width: 150px;
     height: 150px;
     transform: translateX(-50%);
-    filter: drop-shadow(0 12px 6px rgba(20, 40, 20, 0.22));
+    filter: drop-shadow(
+        0 12px 6px rgba(20, 40, 20, 0.22)
+    );
 }
 
 .sprite-body {
@@ -341,8 +399,16 @@ button {
     display: block;
 }
 
+/* ------------------------------
+   Emberon Sprite
+------------------------------ */
+
 .emberon-sprite .sprite-body {
-    background: linear-gradient(145deg, #ff9b54, #d94b35);
+    background: linear-gradient(
+        145deg,
+        #ff9b54,
+        #d94b35
+    );
 }
 
 .emberon-sprite .sprite-detail-one {
@@ -369,8 +435,53 @@ button {
     z-index: -1;
 }
 
+/* ------------------------------
+   Aquava Sprite
+------------------------------ */
+
+.aquava-sprite .sprite-body {
+    background: linear-gradient(
+        145deg,
+        #79c9ef,
+        #327fc1
+    );
+    border-radius: 55% 55% 45% 45%;
+}
+
+.aquava-sprite .sprite-detail-one {
+    top: 12px;
+    left: 48px;
+    width: 54px;
+    height: 42px;
+    background: #4aa5d8;
+    border: 5px solid #25324a;
+    border-radius: 60% 60% 30% 30%;
+    transform: rotate(6deg);
+    z-index: -1;
+}
+
+.aquava-sprite .sprite-detail-two {
+    right: 3px;
+    bottom: 24px;
+    width: 58px;
+    height: 36px;
+    background: #8ddbf2;
+    border: 5px solid #25324a;
+    border-radius: 70% 20% 70% 20%;
+    transform: rotate(-18deg);
+    z-index: -1;
+}
+
+/* ------------------------------
+   Leafling Sprite
+------------------------------ */
+
 .leafling-sprite .sprite-body {
-    background: linear-gradient(145deg, #8fd45c, #438e4c);
+    background: linear-gradient(
+        145deg,
+        #8fd45c,
+        #438e4c
+    );
 }
 
 .leafling-sprite .sprite-detail-one {
@@ -397,9 +508,242 @@ button {
     z-index: -1;
 }
 
+/* ------------------------------
+   Voltix Sprite
+------------------------------ */
+
+.voltix-sprite .sprite-body {
+    background: linear-gradient(
+        145deg,
+        #ffe45c,
+        #d9a918
+    );
+    border-radius: 45% 55% 42% 48%;
+}
+
+.voltix-sprite .sprite-detail-one {
+    top: 3px;
+    left: 32px;
+    width: 38px;
+    height: 64px;
+    background: #ffe968;
+    border: 5px solid #25324a;
+    clip-path: polygon(
+        40% 0,
+        100% 0,
+        65% 45%,
+        100% 45%,
+        20% 100%,
+        40% 55%,
+        0 55%
+    );
+    transform: rotate(-18deg);
+    z-index: -1;
+}
+
+.voltix-sprite .sprite-detail-two {
+    right: 3px;
+    bottom: 32px;
+    width: 62px;
+    height: 48px;
+    background: #f4cf32;
+    border: 5px solid #25324a;
+    clip-path: polygon(
+        0 25%,
+        55% 25%,
+        40% 0,
+        100% 45%,
+        50% 100%,
+        62% 66%,
+        0 66%
+    );
+    z-index: -1;
+}
+
+/* ------------------------------
+   Frostbite Sprite
+------------------------------ */
+
+.frostbite-sprite .sprite-body {
+    background: linear-gradient(
+        145deg,
+        #a9ecf7,
+        #4da8bb
+    );
+    border-radius: 50% 50% 40% 40%;
+}
+
+.frostbite-sprite .sprite-detail-one {
+    top: 2px;
+    left: 42px;
+    width: 64px;
+    height: 55px;
+    background: #d7f6fb;
+    border: 5px solid #25324a;
+    clip-path: polygon(
+        50% 0,
+        65% 32%,
+        100% 25%,
+        75% 55%,
+        94% 86%,
+        55% 72%,
+        34% 100%,
+        28% 62%,
+        0 44%,
+        38% 35%
+    );
+    z-index: -1;
+}
+
+.frostbite-sprite .sprite-detail-two {
+    right: 8px;
+    bottom: 16px;
+    width: 38px;
+    height: 60px;
+    background: #78cedd;
+    border: 5px solid #25324a;
+    border-radius: 60% 30% 60% 30%;
+    transform: rotate(-28deg);
+    z-index: -1;
+}
+
+/* ------------------------------
+   Terranox Sprite
+------------------------------ */
+
+.terranox-sprite .sprite-body {
+    inset: 20px 12px 6px;
+    background: linear-gradient(
+        145deg,
+        #b48250,
+        #7a4c2f
+    );
+    border-radius: 38% 42% 32% 34%;
+}
+
+.terranox-sprite .sprite-detail-one {
+    top: 10px;
+    left: 22px;
+    width: 48px;
+    height: 46px;
+    background: #9a6b3d;
+    border: 5px solid #25324a;
+    clip-path: polygon(
+        50% 0,
+        100% 100%,
+        0 100%
+    );
+    transform: rotate(-12deg);
+    z-index: -1;
+}
+
+.terranox-sprite .sprite-detail-two {
+    top: 8px;
+    right: 22px;
+    width: 48px;
+    height: 46px;
+    background: #9a6b3d;
+    border: 5px solid #25324a;
+    clip-path: polygon(
+        50% 0,
+        100% 100%,
+        0 100%
+    );
+    transform: rotate(12deg);
+    z-index: -1;
+}
+
+/* ------------------------------
+   Galehawk Sprite
+------------------------------ */
+
+.galehawk-sprite .sprite-body {
+    background: linear-gradient(
+        145deg,
+        #9fb3e1,
+        #6579b2
+    );
+    border-radius: 55% 55% 40% 40%;
+}
+
+.galehawk-sprite .sprite-detail-one {
+    left: 1px;
+    bottom: 28px;
+    width: 65px;
+    height: 54px;
+    background: #8297cb;
+    border: 5px solid #25324a;
+    border-radius: 80% 20% 70% 30%;
+    transform: rotate(-24deg);
+    z-index: -1;
+}
+
+.galehawk-sprite .sprite-detail-two {
+    right: 1px;
+    bottom: 28px;
+    width: 65px;
+    height: 54px;
+    background: #8297cb;
+    border: 5px solid #25324a;
+    border-radius: 20% 80% 30% 70%;
+    transform: rotate(24deg);
+    z-index: -1;
+}
+
+/* ------------------------------
+   Shadowpaw Sprite
+------------------------------ */
+
+.shadowpaw-sprite .sprite-body {
+    background: linear-gradient(
+        145deg,
+        #756d86,
+        #403a4c
+    );
+    border-radius: 45% 55% 42% 46%;
+}
+
+.shadowpaw-sprite .sprite-detail-one {
+    top: 6px;
+    left: 30px;
+    width: 42px;
+    height: 55px;
+    background: #565061;
+    border: 5px solid #25324a;
+    clip-path: polygon(
+        50% 0,
+        100% 100%,
+        0 100%
+    );
+    transform: rotate(-14deg);
+    z-index: -1;
+}
+
+.shadowpaw-sprite .sprite-detail-two {
+    top: 6px;
+    right: 30px;
+    width: 42px;
+    height: 55px;
+    background: #565061;
+    border: 5px solid #25324a;
+    clip-path: polygon(
+        50% 0,
+        100% 100%,
+        0 100%
+    );
+    transform: rotate(14deg);
+    z-index: -1;
+}
+
+/* ------------------------------
+   Command Panel
+------------------------------ */
+
 .command-panel {
     display: grid;
-    grid-template-columns: minmax(250px, 0.9fr) minmax(420px, 1.6fr);
+    grid-template-columns:
+        minmax(250px, 0.9fr)
+        minmax(420px, 1.6fr);
     min-height: 190px;
     background: #e8e2ca;
 }
@@ -422,7 +766,10 @@ button {
 .move-grid {
     padding: 16px;
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(
+        2,
+        minmax(0, 1fr)
+    );
     gap: 12px;
 }
 
@@ -439,6 +786,23 @@ button {
     border-radius: 14px;
     box-shadow: 0 5px 0 rgba(10, 16, 32, 0.25);
     text-align: left;
+    transition:
+        transform 150ms ease,
+        filter 150ms ease,
+        opacity 150ms ease;
+}
+
+.move-button:not(:disabled) {
+    cursor: pointer;
+}
+
+.move-button:not(:disabled):hover {
+    filter: brightness(1.08);
+    transform: translateY(-2px);
+}
+
+.move-button:not(:disabled):active {
+    transform: translateY(2px);
 }
 
 .move-button:disabled {
@@ -456,6 +820,10 @@ button {
     font-weight: 700;
     opacity: 0.88;
 }
+
+/* ------------------------------
+   Team Strip
+------------------------------ */
 
 .team-strip {
     padding: 14px 22px;
@@ -496,6 +864,9 @@ button {
     background: #75819a;
     border: 3px solid #d5dcec;
     border-radius: 50%;
+    transition:
+        filter 200ms ease,
+        opacity 200ms ease;
 }
 
 .active-slot {
@@ -507,6 +878,15 @@ button {
             #f4f0df 56% 100%
         );
 }
+
+.fainted-slot {
+    opacity: 0.35;
+    filter: grayscale(1);
+}
+
+/* ------------------------------
+   Type Colors
+------------------------------ */
 
 .type-fire {
     background: var(--fire);
@@ -543,6 +923,10 @@ button {
 .type-normal {
     background: var(--normal);
 }
+
+/* ------------------------------
+   Responsive Layout
+------------------------------ */
 
 @media (max-width: 800px) {
     body {
@@ -638,13 +1022,13 @@ button {
         grid-template-columns: 1fr;
     }
 
-    .team-strip,
-    .team-group {
-        align-items: flex-start;
-    }
-
     .team-strip {
         flex-direction: column;
+    }
+
+    .team-group,
+    .team-strip {
+        align-items: flex-start;
     }
 
     .team-group-opponent {

@@ -2,52 +2,86 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
     <meta
         name="description"
         content="Pocket Clash, a turn-based monster battle vertical slice for COMP 440."
     >
+
     <title>Pocket Clash</title>
+
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
     <main class="game-shell">
+
+        <!-- Game title and controls -->
         <header class="game-header">
             <div>
                 <p class="eyebrow">COMP 440 | Project 4</p>
                 <h1>Pocket Clash</h1>
             </div>
 
-            <button id="restart-button" class="secondary-button" type="button">
+            <button
+                id="restart-button"
+                class="secondary-button"
+                type="button"
+            >
                 Restart Battle
             </button>
         </header>
 
+        <!-- Main battle arena -->
         <section
             id="battle-screen"
             class="battle-screen"
             aria-label="Pocket Clash battle arena"
         >
-            <div class="battle-background" aria-hidden="true">
+
+            <!-- Decorative battle background -->
+            <div
+                class="battle-background"
+                aria-hidden="true"
+            >
                 <div class="sky-layer"></div>
                 <div class="far-hills"></div>
                 <div class="ground-layer"></div>
             </div>
 
+            <!-- Opponent combatant -->
             <section class="combatant combatant-opponent">
+
                 <article class="status-card opponent-status">
+
                     <div class="status-heading">
                         <div>
                             <p class="trainer-label">Opponent</p>
-                            <h2 id="opponent-name">Leafling</h2>
+
+                            <h2 id="opponent-name">
+                                Opponent Monster
+                            </h2>
                         </div>
 
-                        <span id="opponent-level" class="level-label">Lv. 12</span>
+                        <span
+                            id="opponent-level"
+                            class="level-label"
+                        >
+                            Lv. 1
+                        </span>
                     </div>
 
                     <div class="type-row">
-                        <span id="opponent-type" class="type-badge type-grass">
-                            Grass
+                        <span
+                            id="opponent-type"
+                            class="type-badge type-normal"
+                        >
+                            Normal
                         </span>
                     </div>
 
@@ -55,6 +89,7 @@
                         <span class="hp-label">HP</span>
 
                         <div
+                            id="opponent-hp-track"
                             class="hp-track"
                             role="progressbar"
                             aria-label="Opponent HP"
@@ -70,54 +105,99 @@
                         </div>
                     </div>
 
-                    <p id="opponent-hp-text" class="hp-text">100 / 100</p>
+                    <p
+                        id="opponent-hp-text"
+                        class="hp-text"
+                    >
+                        0 / 0
+                    </p>
                 </article>
 
                 <div class="sprite-platform opponent-platform">
+
                     <div
                         id="opponent-sprite"
-                        class="monster-sprite leafling-sprite"
+                        class="monster-sprite"
                         role="img"
-                        aria-label="Leafling, the opponent monster"
+                        aria-label="Opponent monster"
                     >
                         <span class="sprite-body"></span>
-                        <span class="sprite-eye sprite-eye-left"></span>
-                        <span class="sprite-eye sprite-eye-right"></span>
-                        <span class="sprite-detail sprite-detail-one"></span>
-                        <span class="sprite-detail sprite-detail-two"></span>
+
+                        <span
+                            class="sprite-eye sprite-eye-left"
+                        ></span>
+
+                        <span
+                            class="sprite-eye sprite-eye-right"
+                        ></span>
+
+                        <span
+                            class="sprite-detail sprite-detail-one"
+                        ></span>
+
+                        <span
+                            class="sprite-detail sprite-detail-two"
+                        ></span>
                     </div>
                 </div>
             </section>
 
+            <!-- Player combatant -->
             <section class="combatant combatant-player">
+
                 <div class="sprite-platform player-platform">
+
                     <div
                         id="player-sprite"
-                        class="monster-sprite emberon-sprite"
+                        class="monster-sprite"
                         role="img"
-                        aria-label="Emberon, the player monster"
+                        aria-label="Player monster"
                     >
                         <span class="sprite-body"></span>
-                        <span class="sprite-eye sprite-eye-left"></span>
-                        <span class="sprite-eye sprite-eye-right"></span>
-                        <span class="sprite-detail sprite-detail-one"></span>
-                        <span class="sprite-detail sprite-detail-two"></span>
+
+                        <span
+                            class="sprite-eye sprite-eye-left"
+                        ></span>
+
+                        <span
+                            class="sprite-eye sprite-eye-right"
+                        ></span>
+
+                        <span
+                            class="sprite-detail sprite-detail-one"
+                        ></span>
+
+                        <span
+                            class="sprite-detail sprite-detail-two"
+                        ></span>
                     </div>
                 </div>
 
                 <article class="status-card player-status">
+
                     <div class="status-heading">
                         <div>
                             <p class="trainer-label">Your Monster</p>
-                            <h2 id="player-name">Emberon</h2>
+
+                            <h2 id="player-name">
+                                Player Monster
+                            </h2>
                         </div>
 
-                        <span id="player-level" class="level-label">Lv. 12</span>
+                        <span
+                            id="player-level"
+                            class="level-label"
+                        >
+                            Lv. 1
+                        </span>
                     </div>
 
                     <div class="type-row">
-                        <span id="player-type" class="type-badge type-fire">
-                            Fire
+                        <span
+                            id="player-type"
+                            class="type-badge type-normal"
+                        >
+                            Normal
                         </span>
                     </div>
 
@@ -125,6 +205,7 @@
                         <span class="hp-label">HP</span>
 
                         <div
+                            id="player-hp-track"
                             class="hp-track"
                             role="progressbar"
                             aria-label="Player HP"
@@ -140,58 +221,64 @@
                         </div>
                     </div>
 
-                    <p id="player-hp-text" class="hp-text">100 / 100</p>
+                    <p
+                        id="player-hp-text"
+                        class="hp-text"
+                    >
+                        0 / 0
+                    </p>
                 </article>
             </section>
         </section>
 
-        <section class="command-panel" aria-label="Battle commands">
+        <!-- Battle message and move menu -->
+        <section
+            class="command-panel"
+            aria-label="Battle commands"
+        >
+
             <div class="message-box">
-                <p id="battle-message" aria-live="polite">
-                    What will Emberon do?
+                <p
+                    id="battle-message"
+                    aria-live="polite"
+                >
+                    Preparing the battle...
                 </p>
             </div>
 
-            <div id="move-grid" class="move-grid">
-                <button class="move-button type-fire" type="button" disabled>
-                    <span class="move-name">Flame Burst</span>
-                    <span class="move-details">Fire | PP 10 / 10</span>
-                </button>
-
-                <button class="move-button type-normal" type="button" disabled>
-                    <span class="move-name">Quick Strike</span>
-                    <span class="move-details">Normal | PP 20 / 20</span>
-                </button>
-
-                <button class="move-button type-ground" type="button" disabled>
-                    <span class="move-name">Ash Kick</span>
-                    <span class="move-details">Ground | PP 15 / 15</span>
-                </button>
-
-                <button class="move-button type-fire" type="button" disabled>
-                    <span class="move-name">Heat Charge</span>
-                    <span class="move-details">Fire | PP 5 / 5</span>
-                </button>
-            </div>
+            <!-- Move buttons will be generated from JavaScript -->
+            <div
+                id="move-grid"
+                class="move-grid"
+                aria-label="Available moves"
+            ></div>
         </section>
 
+        <!-- Team status -->
         <footer class="team-strip">
-            <div class="team-group">
-                <span class="team-label">Your Team</span>
 
-                <div class="team-slots" aria-label="Player team">
-                    <span class="team-slot active-slot" title="Emberon"></span>
-                    <span class="team-slot" title="Aquava"></span>
-                </div>
+            <div class="team-group">
+                <span class="team-label">
+                    Your Team
+                </span>
+
+                <div
+                    id="player-team-slots"
+                    class="team-slots"
+                    aria-label="Player team"
+                ></div>
             </div>
 
             <div class="team-group team-group-opponent">
-                <span class="team-label">Opponent Team</span>
+                <span class="team-label">
+                    Opponent Team
+                </span>
 
-                <div class="team-slots" aria-label="Opponent team">
-                    <span class="team-slot active-slot" title="Leafling"></span>
-                    <span class="team-slot" title="Voltix"></span>
-                </div>
+                <div
+                    id="opponent-team-slots"
+                    class="team-slots"
+                    aria-label="Opponent team"
+                ></div>
             </div>
         </footer>
     </main>
