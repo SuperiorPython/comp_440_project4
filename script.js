@@ -1,17 +1,19 @@
 "use strict";
 
 /*
-    Pocket Clash - Commit 4
+    Pocket Clash - Commit 5
 
     This commit adds:
-    - Four-creature roster
-    - Four elemental types
-    - Six required type relationships
-    - Pixel-art PNG sprite rendering
-    - Updated unique creature names and moves
+    - Damage calculation
+    - Attack, Defense, and move Power usage
+    - Type effectiveness multipliers
+    - PP deduction
+    - HP reduction
+    - HP bar updates
+    - Battle messages for effectiveness
 
-    Damage calculation, Speed-based turn order, fainting,
-    switching, and victory conditions will be added later.
+    Speed-based turn order, fainting, automatic switching,
+    and win/loss conditions will be added later.
 */
 
 /* --------------------------------------------------
@@ -84,6 +86,24 @@ class Pokemon {
         return this.moves.filter((move) => move.hasPP());
     }
 
+    receiveDamage(damageAmount) {
+        const safeDamage = Math.max(
+            1,
+            Math.floor(damageAmount)
+        );
+
+        this.currentHP = Math.max(
+            0,
+            this.currentHP - safeDamage
+        );
+
+        if (this.currentHP === 0) {
+            this.isFainted = true;
+        }
+
+        return safeDamage;
+    }
+
     reset() {
         this.currentHP = this.maxHP;
         this.isFainted = false;
@@ -99,18 +119,18 @@ class Pokemon {
 -------------------------------------------------- */
 
 /*
-    Six required non-neutral relationships:
+    Six non-neutral relationships:
 
-    Fire is strong against Grass.
-    Grass is weak against Fire.
+    Fire -> Grass: 2
+    Grass -> Fire: 0.5
 
-    Grass is strong against Water.
-    Water is weak against Grass.
+    Grass -> Water: 2
+    Water -> Grass: 0.5
 
-    Water is strong against Fire.
-    Electric is strong against Water.
+    Water -> Fire: 2
+    Electric -> Water: 2
 
-    All unspecified matchups are neutral.
+    Every unspecified matchup is neutral.
 */
 
 const TYPE_CHART = {
@@ -142,6 +162,73 @@ function getTypeEffectiveness(moveType, targetType) {
     }
 
     return moveTypeData[targetType] ?? 1;
+}
+
+function getEffectivenessMessage(multiplier) {
+    if (multiplier > 1) {
+        return "It was super effective!";
+    }
+
+    if (multiplier < 1) {
+        return "It was not very effective.";
+    }
+
+    return "";
+}
+
+/* --------------------------------------------------
+   Damage Calculation
+-------------------------------------------------- */
+
+/*
+    Simplified formula:
+
+    baseDamage =
+        (attacker Attack / defender Defense)
+        * move Power
+        * level modifier
+
+    finalDamage =
+        baseDamage * type multiplier
+
+    The level modifier keeps damage reasonable while
+    still using each required battle statistic.
+*/
+
+function calculateDamage(
+    attacker,
+    defender,
+    move
+) {
+    const levelModifier =
+        (attacker.level + 10) / 40;
+
+    const attackDefenseRatio =
+        attacker.attack /
+        Math.max(1, defender.defense);
+
+    const baseDamage =
+        move.power *
+        attackDefenseRatio *
+        levelModifier;
+
+    const typeMultiplier =
+        getTypeEffectiveness(
+            move.type,
+            defender.type
+        );
+
+    const finalDamage = Math.max(
+        1,
+        Math.round(
+            baseDamage * typeMultiplier
+        )
+    );
+
+    return {
+        damage: finalDamage,
+        typeMultiplier
+    };
 }
 
 /* --------------------------------------------------
@@ -315,14 +402,6 @@ const POKEMON_DATABASE = {
    Starting Teams
 -------------------------------------------------- */
 
-/*
-    The required battle still contains two creatures
-    on each team.
-
-    A team-selection screen can be added later as an
-    optional enhancement.
-*/
-
 const playerTeam = [
     POKEMON_DATABASE.cindervex,
     POKEMON_DATABASE.tidelume
@@ -333,18 +412,28 @@ const opponentTeam = [
     POKEMON_DATABASE.voltari
 ];
 
-let activePlayerPokemon = playerTeam[0];
-let activeOpponentPokemon = opponentTeam[0];
+let activePlayerPokemon =
+    playerTeam[0];
+
+let activeOpponentPokemon =
+    opponentTeam[0];
 
 /* --------------------------------------------------
    Battle States
 -------------------------------------------------- */
 
 const BATTLE_STATES = {
-    WAITING_FOR_PLAYER: "waiting-for-player",
-    SELECTING_OPPONENT_MOVE: "selecting-opponent-move",
-    RESOLVING_TURN: "resolving-turn",
-    BATTLE_OVER: "battle-over"
+    WAITING_FOR_PLAYER:
+        "waiting-for-player",
+
+    SELECTING_OPPONENT_MOVE:
+        "selecting-opponent-move",
+
+    RESOLVING_TURN:
+        "resolving-turn",
+
+    BATTLE_OVER:
+        "battle-over"
 };
 
 /* --------------------------------------------------
@@ -353,14 +442,18 @@ const BATTLE_STATES = {
 
 class BattleManager {
     constructor() {
-        this.state = BATTLE_STATES.WAITING_FOR_PLAYER;
+        this.state =
+            BATTLE_STATES.WAITING_FOR_PLAYER;
+
         this.turnNumber = 1;
         this.playerMove = null;
         this.opponentMove = null;
     }
 
     reset() {
-        this.state = BATTLE_STATES.WAITING_FOR_PLAYER;
+        this.state =
+            BATTLE_STATES.WAITING_FOR_PLAYER;
+
         this.turnNumber = 1;
         this.playerMove = null;
         this.opponentMove = null;
@@ -368,7 +461,8 @@ class BattleManager {
 
     canPlayerSelectMove() {
         return (
-            this.state === BATTLE_STATES.WAITING_FOR_PLAYER &&
+            this.state ===
+                BATTLE_STATES.WAITING_FOR_PLAYER &&
             !activePlayerPokemon.isFainted
         );
     }
@@ -379,12 +473,15 @@ class BattleManager {
         }
 
         const selectedMove =
-            activePlayerPokemon.moves[moveIndex];
+            activePlayerPokemon.moves[
+                moveIndex
+            ];
 
         if (!selectedMove) {
             console.error(
                 `No player move exists at index ${moveIndex}.`
             );
+
             return;
         }
 
@@ -392,10 +489,12 @@ class BattleManager {
             showBattleMessage(
                 `${selectedMove.name} has no PP remaining!`
             );
+
             return;
         }
 
-        this.playerMove = selectedMove;
+        this.playerMove =
+            selectedMove;
 
         this.state =
             BATTLE_STATES.SELECTING_OPPONENT_MOVE;
@@ -409,7 +508,7 @@ class BattleManager {
 
         window.setTimeout(() => {
             this.selectOpponentMove();
-        }, 700);
+        }, 600);
     }
 
     selectOpponentMove() {
@@ -427,12 +526,14 @@ class BattleManager {
             this.opponentMove = null;
 
             console.warn(
-                `${activeOpponentPokemon.name} has no available moves.`
+                `${activeOpponentPokemon.name} has no moves with PP.`
             );
         } else {
-            const randomIndex = Math.floor(
-                Math.random() * availableMoves.length
-            );
+            const randomIndex =
+                Math.floor(
+                    Math.random() *
+                    availableMoves.length
+                );
 
             this.opponentMove =
                 availableMoves[randomIndex];
@@ -442,11 +543,11 @@ class BattleManager {
             BATTLE_STATES.RESOLVING_TURN;
 
         window.setTimeout(() => {
-            this.confirmTurnSelections();
-        }, 700);
+            this.executeTemporaryTurn();
+        }, 600);
     }
 
-    confirmTurnSelections() {
+    async executeTemporaryTurn() {
         if (
             this.state !==
             BATTLE_STATES.RESOLVING_TURN
@@ -454,48 +555,129 @@ class BattleManager {
             return;
         }
 
-        const playerMoveName =
-            this.playerMove?.name ?? "No Move";
-
-        const opponentMoveName =
-            this.opponentMove?.name ?? "No Move";
-
-        showBattleMessage(
-            `${activePlayerPokemon.name} will use ` +
-            `${playerMoveName}. ` +
-            `${activeOpponentPokemon.name} will use ` +
-            `${opponentMoveName}.`
-        );
-
-        console.log(
-            `Turn ${this.turnNumber}`,
-            {
-                playerPokemon:
-                    activePlayerPokemon.name,
-
-                playerMove:
-                    this.playerMove,
-
-                opponentPokemon:
-                    activeOpponentPokemon.name,
-
-                opponentMove:
-                    this.opponentMove
-            }
-        );
-
         /*
-            A later commit will replace this temporary
-            pause with Speed ordering, PP deduction,
-            move execution, and damage calculation.
+            Commit 6 will determine which creature
+            attacks first using Speed.
+
+            For Commit 5, the player attacks first,
+            followed by the opponent.
         */
 
-        window.setTimeout(() => {
-            this.completeTemporaryTurn();
-        }, 1600);
+        if (this.playerMove) {
+            await this.executeMove(
+                activePlayerPokemon,
+                activeOpponentPokemon,
+                this.playerMove,
+                "opponent"
+            );
+        }
+
+        /*
+            Fainting and skipped counterattacks are
+            officially added in Commit 6.
+
+            For now, the opponent attacks only if its
+            HP remains above zero.
+        */
+
+        if (
+            this.opponentMove &&
+            activeOpponentPokemon.currentHP > 0
+        ) {
+            await this.executeMove(
+                activeOpponentPokemon,
+                activePlayerPokemon,
+                this.opponentMove,
+                "player"
+            );
+        }
+
+        this.completeTurn();
     }
 
-    completeTemporaryTurn() {
+    async executeMove(
+        attacker,
+        defender,
+        move,
+        defenderSide
+    ) {
+        if (!move.usePP()) {
+            showBattleMessage(
+                `${attacker.name} tried to use ` +
+                `${move.name}, but it had no PP!`
+            );
+
+            await wait(1100);
+            return;
+        }
+
+        showBattleMessage(
+            `${attacker.name} used ${move.name}!`
+        );
+
+        animateAttacker(attacker);
+
+        await wait(700);
+
+        const result =
+            calculateDamage(
+                attacker,
+                defender,
+                move
+            );
+
+        const actualDamage =
+            defender.receiveDamage(
+                result.damage
+            );
+
+        animateDamage(defenderSide);
+
+        renderPokemonStatus(
+            defender,
+            defenderSide
+        );
+
+        renderMoveButtons(
+            activePlayerPokemon
+        );
+
+        await wait(650);
+
+        const effectivenessMessage =
+            getEffectivenessMessage(
+                result.typeMultiplier
+            );
+
+        let resultMessage =
+            `${defender.name} took ` +
+            `${actualDamage} damage.`;
+
+        if (effectivenessMessage) {
+            resultMessage +=
+                ` ${effectivenessMessage}`;
+        }
+
+        showBattleMessage(
+            resultMessage
+        );
+
+        console.log({
+            attacker: attacker.name,
+            defender: defender.name,
+            move: move.name,
+            power: move.power,
+            typeMultiplier:
+                result.typeMultiplier,
+            damage: actualDamage,
+            defenderHP:
+                defender.currentHP
+        });
+
+        await wait(1200);
+    }
+
+    completeTurn() {
         this.turnNumber += 1;
 
         this.playerMove = null;
@@ -521,65 +703,112 @@ const battleManager =
 -------------------------------------------------- */
 
 const battleMessage =
-    document.getElementById("battle-message");
+    document.getElementById(
+        "battle-message"
+    );
 
 const restartButton =
-    document.getElementById("restart-button");
+    document.getElementById(
+        "restart-button"
+    );
 
 const playerName =
-    document.getElementById("player-name");
+    document.getElementById(
+        "player-name"
+    );
 
 const playerLevel =
-    document.getElementById("player-level");
+    document.getElementById(
+        "player-level"
+    );
 
 const playerType =
-    document.getElementById("player-type");
+    document.getElementById(
+        "player-type"
+    );
 
 const playerHPTrack =
-    document.getElementById("player-hp-track");
+    document.getElementById(
+        "player-hp-track"
+    );
 
 const playerHPBar =
-    document.getElementById("player-hp-bar");
+    document.getElementById(
+        "player-hp-bar"
+    );
 
 const playerHPText =
-    document.getElementById("player-hp-text");
+    document.getElementById(
+        "player-hp-text"
+    );
 
 const playerSprite =
-    document.getElementById("player-sprite");
+    document.getElementById(
+        "player-sprite"
+    );
 
 const opponentName =
-    document.getElementById("opponent-name");
+    document.getElementById(
+        "opponent-name"
+    );
 
 const opponentLevel =
-    document.getElementById("opponent-level");
+    document.getElementById(
+        "opponent-level"
+    );
 
 const opponentType =
-    document.getElementById("opponent-type");
+    document.getElementById(
+        "opponent-type"
+    );
 
 const opponentHPTrack =
-    document.getElementById("opponent-hp-track");
+    document.getElementById(
+        "opponent-hp-track"
+    );
 
 const opponentHPBar =
-    document.getElementById("opponent-hp-bar");
+    document.getElementById(
+        "opponent-hp-bar"
+    );
 
 const opponentHPText =
-    document.getElementById("opponent-hp-text");
+    document.getElementById(
+        "opponent-hp-text"
+    );
 
 const opponentSprite =
-    document.getElementById("opponent-sprite");
+    document.getElementById(
+        "opponent-sprite"
+    );
 
 const moveGrid =
-    document.getElementById("move-grid");
+    document.getElementById(
+        "move-grid"
+    );
 
 const playerTeamSlots =
-    document.getElementById("player-team-slots");
+    document.getElementById(
+        "player-team-slots"
+    );
 
 const opponentTeamSlots =
-    document.getElementById("opponent-team-slots");
+    document.getElementById(
+        "opponent-team-slots"
+    );
 
 /* --------------------------------------------------
-   Interface Helpers
+   General Helpers
 -------------------------------------------------- */
+
+function wait(milliseconds) {
+    return new Promise((resolve) => {
+        window.setTimeout(
+            resolve,
+            milliseconds
+        );
+    });
+}
 
 function formatTypeName(type) {
     return (
@@ -589,7 +818,8 @@ function formatTypeName(type) {
 }
 
 function showBattleMessage(message) {
-    battleMessage.textContent = message;
+    battleMessage.textContent =
+        message;
 }
 
 function removeTypeClasses(element) {
@@ -600,7 +830,9 @@ function removeTypeClasses(element) {
         "type-electric"
     ];
 
-    element.classList.remove(...typeClasses);
+    element.classList.remove(
+        ...typeClasses
+    );
 }
 
 function getHPColorClass(hpPercentage) {
@@ -616,6 +848,44 @@ function getHPColorClass(hpPercentage) {
 }
 
 /* --------------------------------------------------
+   Battle Animations
+-------------------------------------------------- */
+
+function animateAttacker(attacker) {
+    const spriteElement =
+        attacker === activePlayerPokemon
+            ? playerSprite
+            : opponentSprite;
+
+    spriteElement.classList.remove(
+        "attack-animation"
+    );
+
+    void spriteElement.offsetWidth;
+
+    spriteElement.classList.add(
+        "attack-animation"
+    );
+}
+
+function animateDamage(side) {
+    const spriteElement =
+        side === "player"
+            ? playerSprite
+            : opponentSprite;
+
+    spriteElement.classList.remove(
+        "damage-animation"
+    );
+
+    void spriteElement.offsetWidth;
+
+    spriteElement.classList.add(
+        "damage-animation"
+    );
+}
+
+/* --------------------------------------------------
    Pixel Sprite Rendering
 -------------------------------------------------- */
 
@@ -624,16 +894,20 @@ function renderPixelSprite(
     pokemon,
     side
 ) {
-    /*
-        Commit 1 used nested CSS shapes inside these
-        containers. They are removed when the PNG
-        sprites are first rendered.
-    */
-
     spriteElement.innerHTML = "";
 
+    const animationClasses = [
+        "attack-animation",
+        "damage-animation"
+    ];
+
     spriteElement.className =
-        `monster-sprite pixel-sprite ${side}-sprite`;
+        `monster-sprite pixel-sprite ` +
+        `${side}-sprite`;
+
+    spriteElement.classList.remove(
+        ...animationClasses
+    );
 
     spriteElement.style.backgroundImage =
         `url("${pokemon.spritePath}")`;
@@ -653,7 +927,10 @@ function renderPixelSprite(
    Creature Status Rendering
 -------------------------------------------------- */
 
-function renderPokemonStatus(pokemon, side) {
+function renderPokemonStatus(
+    pokemon,
+    side
+) {
     const isPlayer =
         side === "player";
 
@@ -702,9 +979,13 @@ function renderPokemonStatus(pokemon, side) {
         `Lv. ${pokemon.level}`;
 
     typeElement.textContent =
-        formatTypeName(pokemon.type);
+        formatTypeName(
+            pokemon.type
+        );
 
-    removeTypeClasses(typeElement);
+    removeTypeClasses(
+        typeElement
+    );
 
     typeElement.classList.add(
         `type-${pokemon.type}`
@@ -720,7 +1001,9 @@ function renderPokemonStatus(pokemon, side) {
     );
 
     hpBarElement.classList.add(
-        getHPColorClass(hpPercentage)
+        getHPColorClass(
+            hpPercentage
+        )
     );
 
     hpTrackElement.setAttribute(
@@ -734,7 +1017,8 @@ function renderPokemonStatus(pokemon, side) {
     );
 
     hpTextElement.textContent =
-        `${pokemon.currentHP} / ${pokemon.maxHP}`;
+        `${pokemon.currentHP} / ` +
+        `${pokemon.maxHP}`;
 
     renderPixelSprite(
         spriteElement,
@@ -747,9 +1031,14 @@ function renderPokemonStatus(pokemon, side) {
    Move Button Rendering
 -------------------------------------------------- */
 
-function createMoveButton(move, index) {
+function createMoveButton(
+    move,
+    index
+) {
     const button =
-        document.createElement("button");
+        document.createElement(
+            "button"
+        );
 
     button.className =
         `move-button type-${move.type}`;
@@ -765,7 +1054,9 @@ function createMoveButton(move, index) {
         !battleManager.canPlayerSelectMove();
 
     const moveName =
-        document.createElement("span");
+        document.createElement(
+            "span"
+        );
 
     moveName.className =
         "move-name";
@@ -774,7 +1065,9 @@ function createMoveButton(move, index) {
         move.name;
 
     const moveDetails =
-        document.createElement("span");
+        document.createElement(
+            "span"
+        );
 
     moveDetails.className =
         "move-details";
@@ -782,7 +1075,8 @@ function createMoveButton(move, index) {
     moveDetails.textContent =
         `${formatTypeName(move.type)} | ` +
         `Power ${move.power} | ` +
-        `PP ${move.currentPP} / ${move.maxPP}`;
+        `PP ${move.currentPP} / ` +
+        `${move.maxPP}`;
 
     button.append(
         moveName,
@@ -821,9 +1115,11 @@ function disableMoveButtons() {
             ".move-button"
         );
 
-    moveButtons.forEach((button) => {
-        button.disabled = true;
-    });
+    moveButtons.forEach(
+        (button) => {
+            button.disabled = true;
+        }
+    );
 }
 
 /* --------------------------------------------------
@@ -835,17 +1131,23 @@ function createTeamSlot(
     activePokemon
 ) {
     const slot =
-        document.createElement("span");
+        document.createElement(
+            "span"
+        );
 
     slot.className =
         `team-slot type-${pokemon.type}`;
 
     slot.title =
-        `${pokemon.name} (${formatTypeName(
+        `${pokemon.name} ` +
+        `(${formatTypeName(
             pokemon.type
         )})`;
 
-    if (pokemon === activePokemon) {
+    if (
+        pokemon ===
+        activePokemon
+    ) {
         slot.classList.add(
             "active-slot"
         );
@@ -865,7 +1167,8 @@ function renderTeamSlots(
     activePokemon,
     containerElement
 ) {
-    containerElement.innerHTML = "";
+    containerElement.innerHTML =
+        "";
 
     team.forEach((pokemon) => {
         const slot =
@@ -922,7 +1225,8 @@ function handleMoveButtonClick(event) {
 
     const moveIndex =
         Number(
-            selectedButton.dataset.moveIndex
+            selectedButton.dataset
+                .moveIndex
         );
 
     if (!Number.isInteger(moveIndex)) {
@@ -983,12 +1287,7 @@ function initializeGame() {
     );
 
     console.log(
-        "Pocket Clash four-type roster initialized."
-    );
-
-    console.log(
-        "Available creatures:",
-        POKEMON_DATABASE
+        "Pocket Clash damage system initialized."
     );
 }
 

@@ -757,3 +757,96 @@ button {
         flex-direction: row;
     }
 }
+
+/* ------------------------------
+   Commit 5 Battle Animations
+------------------------------ */
+
+@keyframes attackForwardPlayer {
+    0% {
+        transform:
+            translateX(-50%)
+            scaleX(-1);
+    }
+
+    50% {
+        transform:
+            translateX(-15%)
+            scaleX(-1);
+    }
+
+    100% {
+        transform:
+            translateX(-50%)
+            scaleX(-1);
+    }
+}
+
+@keyframes attackForwardOpponent {
+    0% {
+        transform:
+            translateX(-50%);
+    }
+
+    50% {
+        transform:
+            translateX(-85%);
+    }
+
+    100% {
+        transform:
+            translateX(-50%);
+    }
+}
+
+@keyframes damageFlash {
+    0% {
+        filter:
+            brightness(1);
+    }
+
+    20% {
+        filter:
+            brightness(2.2);
+    }
+
+    40% {
+        filter:
+            brightness(0.45);
+    }
+
+    60% {
+        filter:
+            brightness(2);
+    }
+
+    80% {
+        filter:
+            brightness(0.45);
+    }
+
+    100% {
+        filter:
+            brightness(1);
+    }
+}
+
+.player-sprite.attack-animation {
+    animation:
+        attackForwardPlayer
+        0.45s
+        ease;
+}
+
+.opponent-sprite.attack-animation {
+    animation:
+        attackForwardOpponent
+        0.45s
+        ease;
+}
+
+.damage-animation {
+    animation:
+        damageFlash
+        0.55s;
+}
