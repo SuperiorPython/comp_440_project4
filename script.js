@@ -1,19 +1,18 @@
 "use strict";
 
 /*
-    Pocket Clash - Commit 5
+    Pocket Clash - Commit 6
 
     This commit adds:
+    - Speed-based turn order
+    - Complete turn resolution
+    - PP consumption
     - Damage calculation
-    - Attack, Defense, and move Power usage
-    - Type effectiveness multipliers
-    - PP deduction
-    - HP reduction
-    - HP bar updates
-    - Battle messages for effectiveness
-
-    Speed-based turn order, fainting, automatic switching,
-    and win/loss conditions will be added later.
+    - Type effectiveness
+    - Fainting
+    - Automatic switching
+    - Victory and defeat states
+    - Restart support
 */
 
 /* --------------------------------------------------
@@ -83,7 +82,9 @@ class Pokemon {
     }
 
     getAvailableMoves() {
-        return this.moves.filter((move) => move.hasPP());
+        return this.moves.filter((move) => {
+            return move.hasPP();
+        });
     }
 
     receiveDamage(damageAmount) {
@@ -119,18 +120,18 @@ class Pokemon {
 -------------------------------------------------- */
 
 /*
-    Six non-neutral relationships:
+    Six required non-neutral relationships:
 
-    Fire -> Grass: 2
-    Grass -> Fire: 0.5
+    Fire -> Grass = 2
+    Grass -> Fire = 0.5
 
-    Grass -> Water: 2
-    Water -> Grass: 0.5
+    Grass -> Water = 2
+    Water -> Grass = 0.5
 
-    Water -> Fire: 2
-    Electric -> Water: 2
+    Water -> Fire = 2
+    Electric -> Water = 2
 
-    Every unspecified matchup is neutral.
+    All unspecified matchups are neutral.
 */
 
 const TYPE_CHART = {
@@ -179,21 +180,6 @@ function getEffectivenessMessage(multiplier) {
 /* --------------------------------------------------
    Damage Calculation
 -------------------------------------------------- */
-
-/*
-    Simplified formula:
-
-    baseDamage =
-        (attacker Attack / defender Defense)
-        * move Power
-        * level modifier
-
-    finalDamage =
-        baseDamage * type multiplier
-
-    The level modifier keeps damage reasonable while
-    still using each required battle statistic.
-*/
 
 function calculateDamage(
     attacker,
@@ -432,271 +418,12 @@ const BATTLE_STATES = {
     RESOLVING_TURN:
         "resolving-turn",
 
+    SWITCHING:
+        "switching",
+
     BATTLE_OVER:
         "battle-over"
 };
-
-/* --------------------------------------------------
-   Battle Manager
--------------------------------------------------- */
-
-class BattleManager {
-    constructor() {
-        this.state =
-            BATTLE_STATES.WAITING_FOR_PLAYER;
-
-        this.turnNumber = 1;
-        this.playerMove = null;
-        this.opponentMove = null;
-    }
-
-    reset() {
-        this.state =
-            BATTLE_STATES.WAITING_FOR_PLAYER;
-
-        this.turnNumber = 1;
-        this.playerMove = null;
-        this.opponentMove = null;
-    }
-
-    canPlayerSelectMove() {
-        return (
-            this.state ===
-                BATTLE_STATES.WAITING_FOR_PLAYER &&
-            !activePlayerPokemon.isFainted
-        );
-    }
-
-    selectPlayerMove(moveIndex) {
-        if (!this.canPlayerSelectMove()) {
-            return;
-        }
-
-        const selectedMove =
-            activePlayerPokemon.moves[
-                moveIndex
-            ];
-
-        if (!selectedMove) {
-            console.error(
-                `No player move exists at index ${moveIndex}.`
-            );
-
-            return;
-        }
-
-        if (!selectedMove.hasPP()) {
-            showBattleMessage(
-                `${selectedMove.name} has no PP remaining!`
-            );
-
-            return;
-        }
-
-        this.playerMove =
-            selectedMove;
-
-        this.state =
-            BATTLE_STATES.SELECTING_OPPONENT_MOVE;
-
-        disableMoveButtons();
-
-        showBattleMessage(
-            `${activePlayerPokemon.name} selected ` +
-            `${selectedMove.name}.`
-        );
-
-        window.setTimeout(() => {
-            this.selectOpponentMove();
-        }, 600);
-    }
-
-    selectOpponentMove() {
-        if (
-            this.state !==
-            BATTLE_STATES.SELECTING_OPPONENT_MOVE
-        ) {
-            return;
-        }
-
-        const availableMoves =
-            activeOpponentPokemon.getAvailableMoves();
-
-        if (availableMoves.length === 0) {
-            this.opponentMove = null;
-
-            console.warn(
-                `${activeOpponentPokemon.name} has no moves with PP.`
-            );
-        } else {
-            const randomIndex =
-                Math.floor(
-                    Math.random() *
-                    availableMoves.length
-                );
-
-            this.opponentMove =
-                availableMoves[randomIndex];
-        }
-
-        this.state =
-            BATTLE_STATES.RESOLVING_TURN;
-
-        window.setTimeout(() => {
-            this.executeTemporaryTurn();
-        }, 600);
-    }
-
-    async executeTemporaryTurn() {
-        if (
-            this.state !==
-            BATTLE_STATES.RESOLVING_TURN
-        ) {
-            return;
-        }
-
-        /*
-            Commit 6 will determine which creature
-            attacks first using Speed.
-
-            For Commit 5, the player attacks first,
-            followed by the opponent.
-        */
-
-        if (this.playerMove) {
-            await this.executeMove(
-                activePlayerPokemon,
-                activeOpponentPokemon,
-                this.playerMove,
-                "opponent"
-            );
-        }
-
-        /*
-            Fainting and skipped counterattacks are
-            officially added in Commit 6.
-
-            For now, the opponent attacks only if its
-            HP remains above zero.
-        */
-
-        if (
-            this.opponentMove &&
-            activeOpponentPokemon.currentHP > 0
-        ) {
-            await this.executeMove(
-                activeOpponentPokemon,
-                activePlayerPokemon,
-                this.opponentMove,
-                "player"
-            );
-        }
-
-        this.completeTurn();
-    }
-
-    async executeMove(
-        attacker,
-        defender,
-        move,
-        defenderSide
-    ) {
-        if (!move.usePP()) {
-            showBattleMessage(
-                `${attacker.name} tried to use ` +
-                `${move.name}, but it had no PP!`
-            );
-
-            await wait(1100);
-            return;
-        }
-
-        showBattleMessage(
-            `${attacker.name} used ${move.name}!`
-        );
-
-        animateAttacker(attacker);
-
-        await wait(700);
-
-        const result =
-            calculateDamage(
-                attacker,
-                defender,
-                move
-            );
-
-        const actualDamage =
-            defender.receiveDamage(
-                result.damage
-            );
-
-        animateDamage(defenderSide);
-
-        renderPokemonStatus(
-            defender,
-            defenderSide
-        );
-
-        renderMoveButtons(
-            activePlayerPokemon
-        );
-
-        await wait(650);
-
-        const effectivenessMessage =
-            getEffectivenessMessage(
-                result.typeMultiplier
-            );
-
-        let resultMessage =
-            `${defender.name} took ` +
-            `${actualDamage} damage.`;
-
-        if (effectivenessMessage) {
-            resultMessage +=
-                ` ${effectivenessMessage}`;
-        }
-
-        showBattleMessage(
-            resultMessage
-        );
-
-        console.log({
-            attacker: attacker.name,
-            defender: defender.name,
-            move: move.name,
-            power: move.power,
-            typeMultiplier:
-                result.typeMultiplier,
-            damage: actualDamage,
-            defenderHP:
-                defender.currentHP
-        });
-
-        await wait(1200);
-    }
-
-    completeTurn() {
-        this.turnNumber += 1;
-
-        this.playerMove = null;
-        this.opponentMove = null;
-
-        this.state =
-            BATTLE_STATES.WAITING_FOR_PLAYER;
-
-        renderBattleScreen();
-
-        showBattleMessage(
-            `Turn ${this.turnNumber}: What will ` +
-            `${activePlayerPokemon.name} do?`
-        );
-    }
-}
-
-const battleManager =
-    new BattleManager();
 
 /* --------------------------------------------------
    HTML References
@@ -847,6 +574,18 @@ function getHPColorClass(hpPercentage) {
     return "hp-high";
 }
 
+function getFirstAvailablePokemon(team) {
+    return team.find((pokemon) => {
+        return !pokemon.isFainted;
+    }) ?? null;
+}
+
+function isTeamDefeated(team) {
+    return team.every((pokemon) => {
+        return pokemon.isFainted;
+    });
+}
+
 /* --------------------------------------------------
    Battle Animations
 -------------------------------------------------- */
@@ -885,6 +624,23 @@ function animateDamage(side) {
     );
 }
 
+function animateFaint(side) {
+    const spriteElement =
+        side === "player"
+            ? playerSprite
+            : opponentSprite;
+
+    spriteElement.classList.remove(
+        "faint-animation"
+    );
+
+    void spriteElement.offsetWidth;
+
+    spriteElement.classList.add(
+        "faint-animation"
+    );
+}
+
 /* --------------------------------------------------
    Pixel Sprite Rendering
 -------------------------------------------------- */
@@ -896,18 +652,9 @@ function renderPixelSprite(
 ) {
     spriteElement.innerHTML = "";
 
-    const animationClasses = [
-        "attack-animation",
-        "damage-animation"
-    ];
-
     spriteElement.className =
         `monster-sprite pixel-sprite ` +
         `${side}-sprite`;
-
-    spriteElement.classList.remove(
-        ...animationClasses
-    );
 
     spriteElement.style.backgroundImage =
         `url("${pokemon.spritePath}")`;
@@ -1115,11 +862,9 @@ function disableMoveButtons() {
             ".move-button"
         );
 
-    moveButtons.forEach(
-        (button) => {
-            button.disabled = true;
-        }
-    );
+    moveButtons.forEach((button) => {
+        button.disabled = true;
+    });
 }
 
 /* --------------------------------------------------
@@ -1144,10 +889,7 @@ function createTeamSlot(
             pokemon.type
         )})`;
 
-    if (
-        pokemon ===
-        activePokemon
-    ) {
+    if (pokemon === activePokemon) {
         slot.classList.add(
             "active-slot"
         );
@@ -1214,6 +956,465 @@ function renderBattleScreen() {
         opponentTeamSlots
     );
 }
+
+/* --------------------------------------------------
+   Battle Manager
+-------------------------------------------------- */
+
+class BattleManager {
+    constructor() {
+        this.state =
+            BATTLE_STATES.WAITING_FOR_PLAYER;
+
+        this.turnNumber = 1;
+        this.playerMove = null;
+        this.opponentMove = null;
+    }
+
+    reset() {
+        this.state =
+            BATTLE_STATES.WAITING_FOR_PLAYER;
+
+        this.turnNumber = 1;
+        this.playerMove = null;
+        this.opponentMove = null;
+    }
+
+    canPlayerSelectMove() {
+        return (
+            this.state ===
+                BATTLE_STATES.WAITING_FOR_PLAYER &&
+            !activePlayerPokemon.isFainted
+        );
+    }
+
+    selectPlayerMove(moveIndex) {
+        if (!this.canPlayerSelectMove()) {
+            return;
+        }
+
+        const selectedMove =
+            activePlayerPokemon.moves[
+                moveIndex
+            ];
+
+        if (!selectedMove) {
+            console.error(
+                `No move exists at index ${moveIndex}.`
+            );
+
+            return;
+        }
+
+        if (!selectedMove.hasPP()) {
+            showBattleMessage(
+                `${selectedMove.name} has no PP remaining!`
+            );
+
+            return;
+        }
+
+        this.playerMove =
+            selectedMove;
+
+        this.state =
+            BATTLE_STATES.SELECTING_OPPONENT_MOVE;
+
+        disableMoveButtons();
+
+        showBattleMessage(
+            `${activePlayerPokemon.name} selected ` +
+            `${selectedMove.name}.`
+        );
+
+        window.setTimeout(() => {
+            this.selectOpponentMove();
+        }, 600);
+    }
+
+    selectOpponentMove() {
+        if (
+            this.state !==
+            BATTLE_STATES.SELECTING_OPPONENT_MOVE
+        ) {
+            return;
+        }
+
+        const availableMoves =
+            activeOpponentPokemon.getAvailableMoves();
+
+        if (availableMoves.length === 0) {
+            this.opponentMove = null;
+        } else {
+            const randomIndex =
+                Math.floor(
+                    Math.random() *
+                    availableMoves.length
+                );
+
+            this.opponentMove =
+                availableMoves[randomIndex];
+        }
+
+        this.state =
+            BATTLE_STATES.RESOLVING_TURN;
+
+        window.setTimeout(() => {
+            this.resolveTurn();
+        }, 600);
+    }
+
+    async resolveTurn() {
+        if (
+            this.state !==
+            BATTLE_STATES.RESOLVING_TURN
+        ) {
+            return;
+        }
+
+        const playerAction = {
+            attacker: activePlayerPokemon,
+            defender: activeOpponentPokemon,
+            move: this.playerMove,
+            defenderSide: "opponent",
+            side: "player"
+        };
+
+        const opponentAction = {
+            attacker: activeOpponentPokemon,
+            defender: activePlayerPokemon,
+            move: this.opponentMove,
+            defenderSide: "player",
+            side: "opponent"
+        };
+
+        const turnActions =
+            this.determineTurnOrder(
+                playerAction,
+                opponentAction
+            );
+
+        for (const action of turnActions) {
+            if (
+                this.state ===
+                BATTLE_STATES.BATTLE_OVER
+            ) {
+                return;
+            }
+
+            if (
+                action.attacker.isFainted ||
+                action.defender.isFainted ||
+                !action.move
+            ) {
+                continue;
+            }
+
+            await this.executeMove(action);
+
+            if (action.defender.isFainted) {
+                const battleEnded =
+                    await this.handleFaint(
+                        action.defender,
+                        action.defenderSide
+                    );
+
+                if (battleEnded) {
+                    return;
+                }
+
+                /*
+                    The second action is skipped if its
+                    original attacker fainted before it
+                    could move.
+                */
+
+                break;
+            }
+        }
+
+        this.completeTurn();
+    }
+
+    determineTurnOrder(
+        playerAction,
+        opponentAction
+    ) {
+        const playerSpeed =
+            playerAction.attacker.speed;
+
+        const opponentSpeed =
+            opponentAction.attacker.speed;
+
+        if (playerSpeed > opponentSpeed) {
+            return [
+                playerAction,
+                opponentAction
+            ];
+        }
+
+        if (opponentSpeed > playerSpeed) {
+            return [
+                opponentAction,
+                playerAction
+            ];
+        }
+
+        /*
+            Equal Speed uses a random tie-breaker.
+        */
+
+        const playerGoesFirst =
+            Math.random() < 0.5;
+
+        if (playerGoesFirst) {
+            return [
+                playerAction,
+                opponentAction
+            ];
+        }
+
+        return [
+            opponentAction,
+            playerAction
+        ];
+    }
+
+    async executeMove(action) {
+        const {
+            attacker,
+            defender,
+            move,
+            defenderSide
+        } = action;
+
+        if (!move.usePP()) {
+            showBattleMessage(
+                `${attacker.name} tried to use ` +
+                `${move.name}, but it had no PP!`
+            );
+
+            await wait(1100);
+            return;
+        }
+
+        showBattleMessage(
+            `${attacker.name} used ${move.name}!`
+        );
+
+        animateAttacker(attacker);
+
+        await wait(700);
+
+        const result =
+            calculateDamage(
+                attacker,
+                defender,
+                move
+            );
+
+        const actualDamage =
+            defender.receiveDamage(
+                result.damage
+            );
+
+        animateDamage(
+            defenderSide
+        );
+
+        renderPokemonStatus(
+            defender,
+            defenderSide
+        );
+
+        renderMoveButtons(
+            activePlayerPokemon
+        );
+
+        await wait(650);
+
+        const effectivenessMessage =
+            getEffectivenessMessage(
+                result.typeMultiplier
+            );
+
+        let resultMessage =
+            `${defender.name} took ` +
+            `${actualDamage} damage.`;
+
+        if (effectivenessMessage) {
+            resultMessage +=
+                ` ${effectivenessMessage}`;
+        }
+
+        showBattleMessage(
+            resultMessage
+        );
+
+        console.log({
+            turn: this.turnNumber,
+            attacker: attacker.name,
+            defender: defender.name,
+            attackerSpeed: attacker.speed,
+            move: move.name,
+            movePower: move.power,
+            typeMultiplier:
+                result.typeMultiplier,
+            damage: actualDamage,
+            defenderHP:
+                defender.currentHP
+        });
+
+        await wait(1200);
+    }
+
+    async handleFaint(
+        faintedPokemon,
+        side
+    ) {
+        animateFaint(side);
+
+        showBattleMessage(
+            `${faintedPokemon.name} fainted!`
+        );
+
+        renderTeamSlots(
+            side === "player"
+                ? playerTeam
+                : opponentTeam,
+
+            side === "player"
+                ? activePlayerPokemon
+                : activeOpponentPokemon,
+
+            side === "player"
+                ? playerTeamSlots
+                : opponentTeamSlots
+        );
+
+        await wait(1400);
+
+        if (side === "player") {
+            if (isTeamDefeated(playerTeam)) {
+                this.endBattle("defeat");
+                return true;
+            }
+
+            const replacement =
+                getFirstAvailablePokemon(
+                    playerTeam
+                );
+
+            if (replacement) {
+                this.state =
+                    BATTLE_STATES.SWITCHING;
+
+                activePlayerPokemon =
+                    replacement;
+
+                showBattleMessage(
+                    `Go, ${activePlayerPokemon.name}!`
+                );
+
+                renderBattleScreen();
+
+                await wait(1200);
+            }
+        } else {
+            if (isTeamDefeated(opponentTeam)) {
+                this.endBattle("victory");
+                return true;
+            }
+
+            const replacement =
+                getFirstAvailablePokemon(
+                    opponentTeam
+                );
+
+            if (replacement) {
+                this.state =
+                    BATTLE_STATES.SWITCHING;
+
+                activeOpponentPokemon =
+                    replacement;
+
+                showBattleMessage(
+                    `The opponent sent out ` +
+                    `${activeOpponentPokemon.name}!`
+                );
+
+                renderBattleScreen();
+
+                await wait(1200);
+            }
+        }
+
+        return false;
+    }
+
+    completeTurn() {
+        if (
+            this.state ===
+            BATTLE_STATES.BATTLE_OVER
+        ) {
+            return;
+        }
+
+        this.turnNumber += 1;
+
+        this.playerMove = null;
+        this.opponentMove = null;
+
+        this.state =
+            BATTLE_STATES.WAITING_FOR_PLAYER;
+
+        renderBattleScreen();
+
+        showBattleMessage(
+            `Turn ${this.turnNumber}: What will ` +
+            `${activePlayerPokemon.name} do?`
+        );
+    }
+
+    endBattle(result) {
+        this.state =
+            BATTLE_STATES.BATTLE_OVER;
+
+        this.playerMove = null;
+        this.opponentMove = null;
+
+        disableMoveButtons();
+
+        renderTeamSlots(
+            playerTeam,
+            activePlayerPokemon,
+            playerTeamSlots
+        );
+
+        renderTeamSlots(
+            opponentTeam,
+            activeOpponentPokemon,
+            opponentTeamSlots
+        );
+
+        if (result === "victory") {
+            showBattleMessage(
+                "Victory! The opposing team has been defeated."
+            );
+        } else {
+            showBattleMessage(
+                "Defeat! Your team has no creatures left."
+            );
+        }
+
+        console.log(
+            `Battle ended with result: ${result}`
+        );
+    }
+}
+
+const battleManager =
+    new BattleManager();
 
 /* --------------------------------------------------
    Input Handling
@@ -1287,7 +1488,7 @@ function initializeGame() {
     );
 
     console.log(
-        "Pocket Clash damage system initialized."
+        "Pocket Clash full battle loop initialized."
     );
 }
 
