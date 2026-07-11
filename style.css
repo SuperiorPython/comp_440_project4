@@ -1,34 +1,35 @@
 /* ------------------------------
-   Pocket Clash - Commit 2
-   Dynamic battle screen styling
+   Pocket Clash - Commit 4
+   Pixel-art visual redesign
 ------------------------------ */
 
 :root {
-    --page-background: #10182c;
-    --panel-background: #f7f3df;
-    --panel-border: #25324a;
+    --page-background: #111827;
+    --panel-background: #f4e9c8;
+    --panel-border: #202840;
     --text-dark: #172033;
-    --text-muted: #5c6577;
+    --text-muted: #596176;
     --white: #ffffff;
-    --shadow: 0 18px 45px rgba(5, 12, 28, 0.35);
 
-    --hp-green: #42c968;
-    --hp-yellow: #f0c84b;
-    --hp-red: #df5252;
+    --shadow-dark: #080d1a;
+    --shadow-light: rgba(255, 255, 255, 0.16);
 
-    --fire: #de5b3f;
-    --water: #3f86d9;
-    --grass: #4c9b54;
-    --electric: #d9a918;
-    --ground: #9a6b3d;
-    --ice: #4da8bb;
-    --flying: #7689c7;
-    --dark: #565061;
-    --normal: #767b83;
+    --hp-green: #48bd62;
+    --hp-yellow: #e6bd3d;
+    --hp-red: #d94a4a;
+
+    --fire: #d9553f;
+    --water: #3e83cf;
+    --grass: #4d9951;
+    --electric: #d5a91b;
 }
 
 * {
     box-sizing: border-box;
+}
+
+html {
+    image-rendering: pixelated;
 }
 
 body {
@@ -38,18 +39,22 @@ body {
     display: grid;
     place-items: center;
     background:
-        radial-gradient(
-            circle at top,
-            #253b6a 0%,
-            transparent 42%
-        ),
         linear-gradient(
-            160deg,
-            #111a30 0%,
-            #090f1f 100%
-        );
+            135deg,
+            rgba(255, 255, 255, 0.03) 25%,
+            transparent 25%
+        ) 0 0 / 16px 16px,
+        linear-gradient(
+            315deg,
+            rgba(255, 255, 255, 0.03) 25%,
+            transparent 25%
+        ) 0 0 / 16px 16px,
+        var(--page-background);
     color: var(--text-dark);
-    font-family: Arial, Helvetica, sans-serif;
+    font-family:
+        "Courier New",
+        Courier,
+        monospace;
 }
 
 button,
@@ -63,13 +68,19 @@ button {
     border: 0;
 }
 
+/* ------------------------------
+   Game Shell
+------------------------------ */
+
 .game-shell {
     width: min(1100px, 100%);
     overflow: hidden;
     background: var(--panel-background);
-    border: 4px solid #0a1020;
-    border-radius: 24px;
-    box-shadow: var(--shadow);
+    border: 6px solid var(--shadow-dark);
+    border-radius: 4px;
+    box-shadow:
+        12px 12px 0 rgba(0, 0, 0, 0.38),
+        inset 0 0 0 4px #38425c;
 }
 
 /* ------------------------------
@@ -83,47 +94,58 @@ button {
     align-items: center;
     justify-content: space-between;
     gap: 16px;
-    background: #18233c;
+    background: #172139;
     color: var(--white);
-    border-bottom: 4px solid #0a1020;
+    border-bottom: 6px solid var(--shadow-dark);
 }
 
 .game-header h1 {
-    margin: 2px 0 0;
-    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    margin: 4px 0 0;
+    font-size: clamp(
+        1.8rem,
+        4vw,
+        2.8rem
+    );
     line-height: 1;
     letter-spacing: 0.04em;
+    text-shadow:
+        3px 3px 0 #080d1a;
 }
 
 .eyebrow {
     margin: 0;
-    color: #bcc8df;
-    font-size: 0.8rem;
+    color: #bbc6df;
+    font-size: 0.76rem;
     font-weight: 700;
-    letter-spacing: 0.14em;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
 }
 
 .secondary-button {
     padding: 12px 18px;
     color: var(--white);
-    background: #344566;
-    border: 2px solid #6f83aa;
-    border-radius: 12px;
+    background: #344668;
+    border: 4px solid #0c1222;
+    border-radius: 2px;
+    box-shadow:
+        inset 3px 3px 0 rgba(255, 255, 255, 0.12),
+        4px 4px 0 #080d1a;
     font-weight: 700;
     cursor: pointer;
-    transition:
-        transform 150ms ease,
-        background 150ms ease;
 }
 
 .secondary-button:hover {
-    background: #415578;
-    transform: translateY(-1px);
+    background: #40567e;
 }
 
 .secondary-button:active {
-    transform: translateY(1px);
+    transform: translate(
+        3px,
+        3px
+    );
+    box-shadow:
+        inset 2px 2px 0 rgba(0, 0, 0, 0.2),
+        1px 1px 0 #080d1a;
 }
 
 /* ------------------------------
@@ -135,8 +157,8 @@ button {
     min-height: 540px;
     overflow: hidden;
     isolation: isolate;
-    background: #8bd8ed;
-    border-bottom: 4px solid #0a1020;
+    background: #8bd4e8;
+    border-bottom: 6px solid var(--shadow-dark);
 }
 
 .battle-background,
@@ -154,55 +176,55 @@ button {
 .sky-layer {
     background:
         radial-gradient(
-            circle at 78% 16%,
-            rgba(255, 255, 255, 0.9) 0 6%,
-            transparent 6.5%
+            circle at 78% 18%,
+            #f6e583 0 42px,
+            transparent 44px
         ),
         linear-gradient(
-            #8eddf4 0 58%,
-            #b9e88b 58% 100%
+            #7bcbe3 0 58%,
+            #a9d979 58% 100%
         );
 }
 
 .far-hills {
-    top: 36%;
-    height: 35%;
+    top: 39%;
+    height: 28%;
     background:
-        radial-gradient(
-            ellipse at 10% 100%,
-            #5da15c 0 37%,
+        linear-gradient(
+            135deg,
+            transparent 0 20%,
+            #4e9250 20% 38%,
             transparent 38%
         ),
-        radial-gradient(
-            ellipse at 35% 100%,
-            #5c9a57 0 42%,
-            transparent 43%
+        linear-gradient(
+            45deg,
+            transparent 0 48%,
+            #5a9e55 48% 65%,
+            transparent 65%
         ),
-        radial-gradient(
-            ellipse at 68% 100%,
-            #6ba85f 0 38%,
-            transparent 39%
-        ),
-        radial-gradient(
-            ellipse at 95% 100%,
-            #4f9353 0 44%,
-            transparent 45%
+        linear-gradient(
+            135deg,
+            transparent 0 70%,
+            #4b8c4c 70% 88%,
+            transparent 88%
         );
-    opacity: 0.95;
+    opacity: 0.9;
 }
 
 .ground-layer {
     top: 60%;
     background:
         repeating-linear-gradient(
-            -12deg,
-            rgba(255, 255, 255, 0.08) 0 14px,
-            rgba(0, 0, 0, 0.03) 14px 28px
+            0deg,
+            transparent 0 14px,
+            rgba(40, 92, 44, 0.1) 14px 18px
         ),
-        linear-gradient(
-            #7fc85e,
-            #579546
-        );
+        repeating-linear-gradient(
+            90deg,
+            transparent 0 28px,
+            rgba(255, 255, 255, 0.05) 28px 32px
+        ),
+        #6ab052;
 }
 
 .combatant {
@@ -229,10 +251,12 @@ button {
     position: absolute;
     width: min(400px, 42%);
     padding: 16px 18px;
-    background: rgba(255, 252, 236, 0.96);
-    border: 4px solid var(--panel-border);
-    border-radius: 18px 8px 18px 8px;
-    box-shadow: 8px 8px 0 rgba(23, 32, 51, 0.2);
+    background: #fff5d8;
+    border: 5px solid var(--panel-border);
+    border-radius: 2px;
+    box-shadow:
+        7px 7px 0 rgba(16, 24, 40, 0.35),
+        inset 3px 3px 0 rgba(255, 255, 255, 0.75);
 }
 
 .opponent-status {
@@ -253,16 +277,21 @@ button {
 }
 
 .status-heading h2 {
-    margin: 2px 0 0;
-    font-size: clamp(1.2rem, 3vw, 1.75rem);
+    margin: 3px 0 0;
+    font-size: clamp(
+        1.15rem,
+        3vw,
+        1.65rem
+    );
+    text-transform: uppercase;
 }
 
 .trainer-label {
     margin: 0;
     color: var(--text-muted);
-    font-size: 0.72rem;
+    font-size: 0.7rem;
     font-weight: 800;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
 }
 
@@ -278,55 +307,51 @@ button {
 
 .type-badge {
     display: inline-block;
-    min-width: 72px;
+    min-width: 82px;
     padding: 5px 10px;
     color: var(--white);
-    border-radius: 999px;
-    font-size: 0.75rem;
+    border: 3px solid #202840;
+    border-radius: 2px;
+    box-shadow:
+        inset 2px 2px 0 rgba(255, 255, 255, 0.15);
+    font-size: 0.72rem;
     font-weight: 800;
     text-align: center;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
 }
 
 .hp-row {
     margin-top: 14px;
     display: grid;
-    grid-template-columns: auto 1fr;
+    grid-template-columns:
+        auto
+        1fr;
     align-items: center;
     gap: 10px;
 }
 
 .hp-label {
-    color: #356f3f;
+    color: #2f673a;
     font-size: 0.76rem;
     font-weight: 900;
 }
 
 .hp-track {
-    height: 16px;
+    height: 18px;
     overflow: hidden;
-    background: #d7d4c6;
-    border: 3px solid var(--panel-border);
-    border-radius: 999px;
+    background: #d4cdb3;
+    border: 4px solid var(--panel-border);
+    border-radius: 2px;
 }
 
 .hp-fill {
     height: 100%;
     background: var(--hp-green);
-    border-radius: inherit;
     transition:
-        width 350ms ease,
-        background 350ms ease;
+        width 350ms steps(8),
+        background 200ms linear;
 }
 
-.hp-text {
-    margin: 6px 0 0;
-    color: var(--text-muted);
-    font-size: 0.85rem;
-    font-weight: 700;
-    text-align: right;
-}
 .hp-fill.hp-high {
     background: var(--hp-green);
 }
@@ -339,19 +364,42 @@ button {
     background: var(--hp-red);
 }
 
+.hp-text {
+    margin: 7px 0 0;
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-align: right;
+}
+
 /* ------------------------------
    Sprite Platforms
 ------------------------------ */
 
 .sprite-platform {
     position: absolute;
-    width: 265px;
-    height: 90px;
-    background: radial-gradient(
-        ellipse at center,
-        rgba(49, 87, 44, 0.42) 0 58%,
-        transparent 60%
-    );
+    width: 280px;
+    height: 220px;
+}
+
+.sprite-platform::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    width: 280px;
+    height: 82px;
+    transform: translateX(-50%);
+    background:
+        repeating-linear-gradient(
+            90deg,
+            transparent 0 12px,
+            rgba(39, 78, 37, 0.12) 12px 16px
+        ),
+        #508f45;
+    border-top: 8px solid #39703b;
+    border-radius: 50%;
+    z-index: 0;
 }
 
 .opponent-platform {
@@ -365,385 +413,54 @@ button {
 }
 
 /* ------------------------------
-   Base Monster Sprite
+   PNG Pixel Sprites
 ------------------------------ */
 
 .monster-sprite {
     position: absolute;
     left: 50%;
     bottom: 24px;
-    width: 150px;
-    height: 150px;
+    width: 190px;
+    height: 190px;
     transform: translateX(-50%);
-    filter: drop-shadow(
-        0 12px 6px rgba(20, 40, 20, 0.22)
-    );
+    z-index: 2;
 }
 
-.sprite-body {
-    position: absolute;
-    inset: 26px 20px 10px;
-    border: 5px solid #25324a;
-    border-radius: 48% 52% 44% 46%;
+.pixel-sprite {
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+
+    filter:
+        drop-shadow(
+            7px 7px 0 rgba(27, 43, 28, 0.22)
+        );
 }
 
-.sprite-eye {
-    position: absolute;
-    top: 67px;
-    width: 13px;
-    height: 18px;
-    background: #172033;
-    border-radius: 50%;
-    z-index: 3;
+.player-sprite {
+    transform:
+        translateX(-50%)
+        scaleX(-1);
 }
 
-.sprite-eye-left {
-    left: 53px;
+.opponent-sprite {
+    transform:
+        translateX(-50%)
+        scaleX(1);
 }
 
-.sprite-eye-right {
-    right: 53px;
-}
+/*
+    Hide any old CSS sprite pieces that remain in
+    the HTML before JavaScript removes them.
+*/
 
-.sprite-detail {
-    position: absolute;
-    display: block;
-}
-
-/* ------------------------------
-   Emberon Sprite
------------------------------- */
-
-.emberon-sprite .sprite-body {
-    background: linear-gradient(
-        145deg,
-        #ff9b54,
-        #d94b35
-    );
-}
-
-.emberon-sprite .sprite-detail-one {
-    top: 6px;
-    left: 44px;
-    width: 62px;
-    height: 52px;
-    background: #ef6f3b;
-    border: 5px solid #25324a;
-    border-radius: 55% 45% 70% 30%;
-    transform: rotate(-8deg);
-    z-index: -1;
-}
-
-.emberon-sprite .sprite-detail-two {
-    right: 5px;
-    bottom: 26px;
-    width: 50px;
-    height: 28px;
-    background: #f9c04b;
-    border: 5px solid #25324a;
-    border-radius: 50% 60% 50% 50%;
-    transform: rotate(-25deg);
-    z-index: -1;
-}
-
-/* ------------------------------
-   Aquava Sprite
------------------------------- */
-
-.aquava-sprite .sprite-body {
-    background: linear-gradient(
-        145deg,
-        #79c9ef,
-        #327fc1
-    );
-    border-radius: 55% 55% 45% 45%;
-}
-
-.aquava-sprite .sprite-detail-one {
-    top: 12px;
-    left: 48px;
-    width: 54px;
-    height: 42px;
-    background: #4aa5d8;
-    border: 5px solid #25324a;
-    border-radius: 60% 60% 30% 30%;
-    transform: rotate(6deg);
-    z-index: -1;
-}
-
-.aquava-sprite .sprite-detail-two {
-    right: 3px;
-    bottom: 24px;
-    width: 58px;
-    height: 36px;
-    background: #8ddbf2;
-    border: 5px solid #25324a;
-    border-radius: 70% 20% 70% 20%;
-    transform: rotate(-18deg);
-    z-index: -1;
-}
-
-/* ------------------------------
-   Leafling Sprite
------------------------------- */
-
-.leafling-sprite .sprite-body {
-    background: linear-gradient(
-        145deg,
-        #8fd45c,
-        #438e4c
-    );
-}
-
-.leafling-sprite .sprite-detail-one {
-    top: 0;
-    left: 46px;
-    width: 58px;
-    height: 64px;
-    background: #5eb35c;
-    border: 5px solid #25324a;
-    border-radius: 80% 10% 80% 10%;
-    transform: rotate(42deg);
-    z-index: -1;
-}
-
-.leafling-sprite .sprite-detail-two {
-    left: 18px;
-    bottom: 22px;
-    width: 36px;
-    height: 54px;
-    background: #79c96b;
-    border: 5px solid #25324a;
-    border-radius: 70% 30% 70% 30%;
-    transform: rotate(-34deg);
-    z-index: -1;
-}
-
-/* ------------------------------
-   Voltix Sprite
------------------------------- */
-
-.voltix-sprite .sprite-body {
-    background: linear-gradient(
-        145deg,
-        #ffe45c,
-        #d9a918
-    );
-    border-radius: 45% 55% 42% 48%;
-}
-
-.voltix-sprite .sprite-detail-one {
-    top: 3px;
-    left: 32px;
-    width: 38px;
-    height: 64px;
-    background: #ffe968;
-    border: 5px solid #25324a;
-    clip-path: polygon(
-        40% 0,
-        100% 0,
-        65% 45%,
-        100% 45%,
-        20% 100%,
-        40% 55%,
-        0 55%
-    );
-    transform: rotate(-18deg);
-    z-index: -1;
-}
-
-.voltix-sprite .sprite-detail-two {
-    right: 3px;
-    bottom: 32px;
-    width: 62px;
-    height: 48px;
-    background: #f4cf32;
-    border: 5px solid #25324a;
-    clip-path: polygon(
-        0 25%,
-        55% 25%,
-        40% 0,
-        100% 45%,
-        50% 100%,
-        62% 66%,
-        0 66%
-    );
-    z-index: -1;
-}
-
-/* ------------------------------
-   Frostbite Sprite
------------------------------- */
-
-.frostbite-sprite .sprite-body {
-    background: linear-gradient(
-        145deg,
-        #a9ecf7,
-        #4da8bb
-    );
-    border-radius: 50% 50% 40% 40%;
-}
-
-.frostbite-sprite .sprite-detail-one {
-    top: 2px;
-    left: 42px;
-    width: 64px;
-    height: 55px;
-    background: #d7f6fb;
-    border: 5px solid #25324a;
-    clip-path: polygon(
-        50% 0,
-        65% 32%,
-        100% 25%,
-        75% 55%,
-        94% 86%,
-        55% 72%,
-        34% 100%,
-        28% 62%,
-        0 44%,
-        38% 35%
-    );
-    z-index: -1;
-}
-
-.frostbite-sprite .sprite-detail-two {
-    right: 8px;
-    bottom: 16px;
-    width: 38px;
-    height: 60px;
-    background: #78cedd;
-    border: 5px solid #25324a;
-    border-radius: 60% 30% 60% 30%;
-    transform: rotate(-28deg);
-    z-index: -1;
-}
-
-/* ------------------------------
-   Terranox Sprite
------------------------------- */
-
-.terranox-sprite .sprite-body {
-    inset: 20px 12px 6px;
-    background: linear-gradient(
-        145deg,
-        #b48250,
-        #7a4c2f
-    );
-    border-radius: 38% 42% 32% 34%;
-}
-
-.terranox-sprite .sprite-detail-one {
-    top: 10px;
-    left: 22px;
-    width: 48px;
-    height: 46px;
-    background: #9a6b3d;
-    border: 5px solid #25324a;
-    clip-path: polygon(
-        50% 0,
-        100% 100%,
-        0 100%
-    );
-    transform: rotate(-12deg);
-    z-index: -1;
-}
-
-.terranox-sprite .sprite-detail-two {
-    top: 8px;
-    right: 22px;
-    width: 48px;
-    height: 46px;
-    background: #9a6b3d;
-    border: 5px solid #25324a;
-    clip-path: polygon(
-        50% 0,
-        100% 100%,
-        0 100%
-    );
-    transform: rotate(12deg);
-    z-index: -1;
-}
-
-/* ------------------------------
-   Galehawk Sprite
------------------------------- */
-
-.galehawk-sprite .sprite-body {
-    background: linear-gradient(
-        145deg,
-        #9fb3e1,
-        #6579b2
-    );
-    border-radius: 55% 55% 40% 40%;
-}
-
-.galehawk-sprite .sprite-detail-one {
-    left: 1px;
-    bottom: 28px;
-    width: 65px;
-    height: 54px;
-    background: #8297cb;
-    border: 5px solid #25324a;
-    border-radius: 80% 20% 70% 30%;
-    transform: rotate(-24deg);
-    z-index: -1;
-}
-
-.galehawk-sprite .sprite-detail-two {
-    right: 1px;
-    bottom: 28px;
-    width: 65px;
-    height: 54px;
-    background: #8297cb;
-    border: 5px solid #25324a;
-    border-radius: 20% 80% 30% 70%;
-    transform: rotate(24deg);
-    z-index: -1;
-}
-
-/* ------------------------------
-   Shadowpaw Sprite
------------------------------- */
-
-.shadowpaw-sprite .sprite-body {
-    background: linear-gradient(
-        145deg,
-        #756d86,
-        #403a4c
-    );
-    border-radius: 45% 55% 42% 46%;
-}
-
-.shadowpaw-sprite .sprite-detail-one {
-    top: 6px;
-    left: 30px;
-    width: 42px;
-    height: 55px;
-    background: #565061;
-    border: 5px solid #25324a;
-    clip-path: polygon(
-        50% 0,
-        100% 100%,
-        0 100%
-    );
-    transform: rotate(-14deg);
-    z-index: -1;
-}
-
-.shadowpaw-sprite .sprite-detail-two {
-    top: 6px;
-    right: 30px;
-    width: 42px;
-    height: 55px;
-    background: #565061;
-    border: 5px solid #25324a;
-    clip-path: polygon(
-        50% 0,
-        100% 100%,
-        0 100%
-    );
-    transform: rotate(14deg);
-    z-index: -1;
+.monster-sprite .sprite-body,
+.monster-sprite .sprite-eye,
+.monster-sprite .sprite-detail {
+    display: none;
 }
 
 /* ------------------------------
@@ -756,51 +473,57 @@ button {
         minmax(250px, 0.9fr)
         minmax(420px, 1.6fr);
     min-height: 190px;
-    background: #e8e2ca;
+    background: #d8cba6;
 }
 
 .message-box {
     padding: 26px;
     display: flex;
     align-items: center;
-    background: #fffdf3;
-    border-right: 4px solid #0a1020;
+    background: #fff5d8;
+    border-right: 6px solid var(--shadow-dark);
 }
 
 .message-box p {
     margin: 0;
-    font-size: clamp(1.15rem, 2.4vw, 1.55rem);
+    font-size: clamp(
+        1rem,
+        2.2vw,
+        1.4rem
+    );
     font-weight: 800;
-    line-height: 1.45;
+    line-height: 1.5;
 }
 
 .move-grid {
     padding: 16px;
     display: grid;
-    grid-template-columns: repeat(
-        2,
-        minmax(0, 1fr)
-    );
-    gap: 12px;
+    grid-template-columns:
+        repeat(
+            2,
+            minmax(0, 1fr)
+        );
+    gap: 14px;
 }
 
 .move-button {
-    min-height: 68px;
+    min-height: 72px;
     padding: 12px 14px;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     justify-content: center;
-    gap: 4px;
+    gap: 5px;
     color: var(--white);
-    border: 3px solid rgba(15, 22, 38, 0.65);
-    border-radius: 14px;
-    box-shadow: 0 5px 0 rgba(10, 16, 32, 0.25);
+    border: 4px solid #11182a;
+    border-radius: 2px;
+    box-shadow:
+        inset 3px 3px 0 rgba(255, 255, 255, 0.13),
+        5px 5px 0 rgba(8, 13, 26, 0.75);
     text-align: left;
     transition:
-        transform 150ms ease,
-        filter 150ms ease,
-        opacity 150ms ease;
+        filter 100ms linear,
+        transform 100ms linear;
 }
 
 .move-button:not(:disabled) {
@@ -808,28 +531,36 @@ button {
 }
 
 .move-button:not(:disabled):hover {
-    filter: brightness(1.08);
+    filter: brightness(1.12);
     transform: translateY(-2px);
 }
 
 .move-button:not(:disabled):active {
-    transform: translateY(2px);
+    transform: translate(
+        4px,
+        4px
+    );
+    box-shadow:
+        inset 2px 2px 0 rgba(0, 0, 0, 0.16),
+        1px 1px 0 rgba(8, 13, 26, 0.75);
 }
 
 .move-button:disabled {
-    opacity: 0.82;
+    opacity: 0.65;
     cursor: not-allowed;
+    filter: grayscale(0.15);
 }
 
 .move-name {
-    font-size: 1rem;
+    font-size: 0.98rem;
     font-weight: 900;
+    text-transform: uppercase;
 }
 
 .move-details {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: 700;
-    opacity: 0.88;
+    opacity: 0.9;
 }
 
 /* ------------------------------
@@ -837,11 +568,11 @@ button {
 ------------------------------ */
 
 .team-strip {
-    padding: 14px 22px;
+    padding: 15px 22px;
     display: flex;
     justify-content: space-between;
     gap: 20px;
-    background: #18233c;
+    background: #172139;
     color: var(--white);
 }
 
@@ -856,8 +587,8 @@ button {
 }
 
 .team-label {
-    color: #c6d0e4;
-    font-size: 0.76rem;
+    color: #c4cee3;
+    font-size: 0.72rem;
     font-weight: 800;
     letter-spacing: 0.1em;
     text-transform: uppercase;
@@ -865,34 +596,30 @@ button {
 
 .team-slots {
     display: flex;
-    gap: 8px;
+    gap: 10px;
 }
 
 .team-slot {
-    width: 22px;
-    height: 22px;
+    width: 24px;
+    height: 24px;
     display: block;
-    background: #75819a;
-    border: 3px solid #d5dcec;
-    border-radius: 50%;
-    transition:
-        filter 200ms ease,
-        opacity 200ms ease;
+    border: 4px solid #e1e7f3;
+    border-radius: 2px;
+    box-shadow:
+        3px 3px 0 #080d1a;
 }
 
-.active-slot {
-    background:
-        linear-gradient(
-            to bottom,
-            #dc4e4e 0 44%,
-            #172033 44% 56%,
-            #f4f0df 56% 100%
-        );
+.team-slot.active-slot {
+    outline:
+        3px solid #f7dc60;
+    outline-offset: 3px;
 }
 
-.fainted-slot {
-    opacity: 0.35;
-    filter: grayscale(1);
+.team-slot.fainted-slot {
+    opacity: 0.3;
+    filter:
+        grayscale(1)
+        brightness(0.6);
 }
 
 /* ------------------------------
@@ -915,26 +642,6 @@ button {
     background: var(--electric);
 }
 
-.type-ground {
-    background: var(--ground);
-}
-
-.type-ice {
-    background: var(--ice);
-}
-
-.type-flying {
-    background: var(--flying);
-}
-
-.type-dark {
-    background: var(--dark);
-}
-
-.type-normal {
-    background: var(--normal);
-}
-
 /* ------------------------------
    Responsive Layout
 ------------------------------ */
@@ -953,7 +660,10 @@ button {
     }
 
     .status-card {
-        width: min(410px, 82%);
+        width: min(
+            410px,
+            82%
+        );
     }
 
     .opponent-status {
@@ -965,13 +675,13 @@ button {
     }
 
     .opponent-platform {
-        right: 1%;
+        right: 0;
         bottom: -4px;
     }
 
     .player-platform {
-        left: 1%;
-        bottom: 80px;
+        left: 0;
+        bottom: 82px;
     }
 
     .command-panel {
@@ -981,11 +691,16 @@ button {
     .message-box {
         min-height: 110px;
         border-right: 0;
-        border-bottom: 4px solid #0a1020;
+        border-bottom:
+            6px solid var(--shadow-dark);
     }
 }
 
 @media (max-width: 560px) {
+    body {
+        padding: 6px;
+    }
+
     .game-header {
         flex-direction: column;
     }
@@ -1011,22 +726,18 @@ button {
     }
 
     .opponent-platform {
-        right: -12%;
-        bottom: -4px;
+        right: -18%;
+        bottom: 0;
     }
 
     .player-platform {
-        left: -10%;
-        bottom: 118px;
+        left: -18%;
+        bottom: 120px;
     }
 
     .monster-sprite {
-        width: 130px;
-        height: 130px;
-    }
-
-    .sprite-body {
-        inset: 26px 18px 8px;
+        width: 150px;
+        height: 150px;
     }
 
     .move-grid {
@@ -1037,8 +748,8 @@ button {
         flex-direction: column;
     }
 
-    .team-group,
-    .team-strip {
+    .team-strip,
+    .team-group {
         align-items: flex-start;
     }
 

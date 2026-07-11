@@ -1,15 +1,14 @@
 "use strict";
 
 /*
-    Pocket Clash - Commit 3
+    Pocket Clash - Commit 4
 
     This commit adds:
-    - Battle Manager
-    - Battle state tracking
-    - Clickable move selection
-    - Opponent move selection
-    - PP availability checks
-    - Temporary turn confirmation messages
+    - Four-creature roster
+    - Four elemental types
+    - Six required type relationships
+    - Pixel-art PNG sprite rendering
+    - Updated unique creature names and moves
 
     Damage calculation, Speed-based turn order, fainting,
     switching, and victory conditions will be added later.
@@ -55,7 +54,7 @@ class Pokemon {
         defense,
         speed,
         level,
-        spriteClass,
+        spritePath,
         moves
     ) {
         this.name = name;
@@ -66,7 +65,7 @@ class Pokemon {
         this.defense = defense;
         this.speed = speed;
         this.level = level;
-        this.spriteClass = spriteClass;
+        this.spritePath = spritePath;
         this.moves = moves;
         this.isFainted = false;
     }
@@ -99,43 +98,40 @@ class Pokemon {
    Type Effectiveness
 -------------------------------------------------- */
 
+/*
+    Six required non-neutral relationships:
+
+    Fire is strong against Grass.
+    Grass is weak against Fire.
+
+    Grass is strong against Water.
+    Water is weak against Grass.
+
+    Water is strong against Fire.
+    Electric is strong against Water.
+
+    All unspecified matchups are neutral.
+*/
+
 const TYPE_CHART = {
     fire: {
-        grass: 2,
-        water: 0.5
+        grass: 2
     },
 
     grass: {
-        water: 2,
-        fire: 0.5
+        fire: 0.5,
+        water: 2
     },
 
     water: {
-        fire: 2,
         grass: 0.5,
+        fire: 2,
         electric: 0.5
     },
 
     electric: {
-        water: 2,
-        ground: 0.5
-    },
-
-    ground: {
-        electric: 2
-    },
-
-    ice: {
-        flying: 2
-    },
-
-    flying: {
-        ice: 0.5
-    },
-
-    dark: {},
-
-    normal: {}
+        water: 2
+    }
 };
 
 function getTypeEffectiveness(moveType, targetType) {
@@ -149,151 +145,168 @@ function getTypeEffectiveness(moveType, targetType) {
 }
 
 /* --------------------------------------------------
-   Move Factory
+   Factories
 -------------------------------------------------- */
 
 function createMove(name, type, power, maxPP) {
-    return new Move(name, type, power, maxPP);
+    return new Move(
+        name,
+        type,
+        power,
+        maxPP
+    );
 }
 
 /* --------------------------------------------------
-   Pokemon Database
+   Creature Database
 -------------------------------------------------- */
 
 const POKEMON_DATABASE = {
-    emberon: new Pokemon(
-        "Emberon",
+    cindervex: new Pokemon(
+        "Cindervex",
         "fire",
         110,
-        78,
+        80,
         58,
         72,
         12,
-        "emberon-sprite",
+        "assets/fire_sprite.png",
         [
-            createMove("Flame Burst", "fire", 42, 10),
-            createMove("Quick Strike", "normal", 28, 20),
-            createMove("Ash Kick", "ground", 34, 15),
-            createMove("Heat Charge", "fire", 55, 5)
+            createMove(
+                "Ember Fang",
+                "fire",
+                42,
+                12
+            ),
+            createMove(
+                "Scorch Dash",
+                "fire",
+                34,
+                16
+            ),
+            createMove(
+                "Blazing Roar",
+                "fire",
+                50,
+                8
+            ),
+            createMove(
+                "Inferno Rush",
+                "fire",
+                60,
+                5
+            )
         ]
     ),
 
-    aquava: new Pokemon(
-        "Aquava",
+    tidelume: new Pokemon(
+        "Tidelume",
         "water",
-        120,
-        66,
-        70,
-        62,
-        12,
-        "aquava-sprite",
-        [
-            createMove("Water Pulse", "water", 42, 10),
-            createMove("Fin Slap", "normal", 30, 20),
-            createMove("Frost Spray", "ice", 36, 12),
-            createMove("Tidal Crash", "water", 54, 5)
-        ]
-    ),
-
-    leafling: new Pokemon(
-        "Leafling",
-        "grass",
-        125,
-        62,
-        78,
-        55,
-        12,
-        "leafling-sprite",
-        [
-            createMove("Leaf Slice", "grass", 40, 12),
-            createMove("Tackle", "normal", 30, 20),
-            createMove("Root Slam", "ground", 36, 10),
-            createMove("Vine Crush", "grass", 52, 5)
-        ]
-    ),
-
-    voltix: new Pokemon(
-        "Voltix",
-        "electric",
-        95,
+        122,
+        68,
         72,
+        62,
+        12,
+        "assets/water_sprite.png",
+        [
+            createMove(
+                "Ripple Shot",
+                "water",
+                38,
+                15
+            ),
+            createMove(
+                "Tidal Swipe",
+                "water",
+                44,
+                10
+            ),
+            createMove(
+                "Foam Burst",
+                "water",
+                32,
+                18
+            ),
+            createMove(
+                "Ocean Crash",
+                "water",
+                58,
+                5
+            )
+        ]
+    ),
+
+    bramblehorn: new Pokemon(
+        "Bramblehorn",
+        "grass",
+        132,
+        64,
+        84,
         52,
-        92,
         12,
-        "voltix-sprite",
+        "assets/grass_sprite.png",
         [
-            createMove("Spark Shot", "electric", 40, 12),
-            createMove("Quick Strike", "normal", 28, 20),
-            createMove("Static Rush", "electric", 48, 8),
-            createMove("Air Dash", "flying", 34, 12)
+            createMove(
+                "Thorn Jab",
+                "grass",
+                40,
+                14
+            ),
+            createMove(
+                "Vine Slam",
+                "grass",
+                46,
+                10
+            ),
+            createMove(
+                "Briar Charge",
+                "grass",
+                34,
+                16
+            ),
+            createMove(
+                "Forest Crush",
+                "grass",
+                56,
+                5
+            )
         ]
     ),
 
-    frostbite: new Pokemon(
-        "Frostbite",
-        "ice",
-        105,
-        82,
-        60,
-        64,
-        12,
-        "frostbite-sprite",
-        [
-            createMove("Ice Shard", "ice", 38, 15),
-            createMove("Chill Bite", "ice", 46, 8),
-            createMove("Heavy Swipe", "normal", 34, 15),
-            createMove("Frozen Gust", "flying", 32, 12)
-        ]
-    ),
-
-    terranox: new Pokemon(
-        "Terranox",
-        "ground",
-        140,
+    voltari: new Pokemon(
+        "Voltari",
+        "electric",
+        98,
         74,
-        88,
-        38,
-        12,
-        "terranox-sprite",
-        [
-            createMove("Rock Pound", "ground", 44, 10),
-            createMove("Body Slam", "normal", 38, 12),
-            createMove("Mud Burst", "ground", 36, 15),
-            createMove("Stone Charge", "ground", 58, 5)
-        ]
-    ),
-
-    galehawk: new Pokemon(
-        "Galehawk",
-        "flying",
-        100,
-        70,
         54,
-        88,
+        94,
         12,
-        "galehawk-sprite",
+        "assets/electric_sprite.png",
         [
-            createMove("Wing Slash", "flying", 40, 12),
-            createMove("Quick Strike", "normal", 28, 20),
-            createMove("Frost Gust", "ice", 34, 10),
-            createMove("Sky Dive", "flying", 55, 5)
-        ]
-    ),
-
-    shadowpaw: new Pokemon(
-        "Shadowpaw",
-        "dark",
-        108,
-        76,
-        64,
-        76,
-        12,
-        "shadowpaw-sprite",
-        [
-            createMove("Night Claw", "dark", 42, 12),
-            createMove("Quick Strike", "normal", 28, 20),
-            createMove("Shadow Rush", "dark", 48, 8),
-            createMove("Dust Kick", "ground", 34, 12)
+            createMove(
+                "Spark Claw",
+                "electric",
+                38,
+                15
+            ),
+            createMove(
+                "Static Dash",
+                "electric",
+                42,
+                12
+            ),
+            createMove(
+                "Voltage Burst",
+                "electric",
+                48,
+                8
+            ),
+            createMove(
+                "Thunder Dive",
+                "electric",
+                58,
+                5
+            )
         ]
     )
 };
@@ -302,14 +315,22 @@ const POKEMON_DATABASE = {
    Starting Teams
 -------------------------------------------------- */
 
+/*
+    The required battle still contains two creatures
+    on each team.
+
+    A team-selection screen can be added later as an
+    optional enhancement.
+*/
+
 const playerTeam = [
-    POKEMON_DATABASE.emberon,
-    POKEMON_DATABASE.aquava
+    POKEMON_DATABASE.cindervex,
+    POKEMON_DATABASE.tidelume
 ];
 
 const opponentTeam = [
-    POKEMON_DATABASE.leafling,
-    POKEMON_DATABASE.voltix
+    POKEMON_DATABASE.bramblehorn,
+    POKEMON_DATABASE.voltari
 ];
 
 let activePlayerPokemon = playerTeam[0];
@@ -375,6 +396,7 @@ class BattleManager {
         }
 
         this.playerMove = selectedMove;
+
         this.state =
             BATTLE_STATES.SELECTING_OPPONENT_MOVE;
 
@@ -402,11 +424,11 @@ class BattleManager {
             activeOpponentPokemon.getAvailableMoves();
 
         if (availableMoves.length === 0) {
+            this.opponentMove = null;
+
             console.warn(
                 `${activeOpponentPokemon.name} has no available moves.`
             );
-
-            this.opponentMove = null;
         } else {
             const randomIndex = Math.floor(
                 Math.random() * availableMoves.length
@@ -416,7 +438,8 @@ class BattleManager {
                 availableMoves[randomIndex];
         }
 
-        this.state = BATTLE_STATES.RESOLVING_TURN;
+        this.state =
+            BATTLE_STATES.RESOLVING_TURN;
 
         window.setTimeout(() => {
             this.confirmTurnSelections();
@@ -425,7 +448,8 @@ class BattleManager {
 
     confirmTurnSelections() {
         if (
-            this.state !== BATTLE_STATES.RESOLVING_TURN
+            this.state !==
+            BATTLE_STATES.RESOLVING_TURN
         ) {
             return;
         }
@@ -443,16 +467,27 @@ class BattleManager {
             `${opponentMoveName}.`
         );
 
-        console.log(`Turn ${this.turnNumber}`, {
-            playerPokemon: activePlayerPokemon.name,
-            playerMove: this.playerMove,
-            opponentPokemon: activeOpponentPokemon.name,
-            opponentMove: this.opponentMove
-        });
+        console.log(
+            `Turn ${this.turnNumber}`,
+            {
+                playerPokemon:
+                    activePlayerPokemon.name,
+
+                playerMove:
+                    this.playerMove,
+
+                opponentPokemon:
+                    activeOpponentPokemon.name,
+
+                opponentMove:
+                    this.opponentMove
+            }
+        );
 
         /*
-            Commit 4 will replace this temporary pause
-            with damage calculation and move execution.
+            A later commit will replace this temporary
+            pause with Speed ordering, PP deduction,
+            move execution, and damage calculation.
         */
 
         window.setTimeout(() => {
@@ -461,15 +496,13 @@ class BattleManager {
     }
 
     completeTemporaryTurn() {
-        /*
-            PP is not deducted yet because moves are not
-            actually executed in this commit.
-        */
-
         this.turnNumber += 1;
+
         this.playerMove = null;
         this.opponentMove = null;
-        this.state = BATTLE_STATES.WAITING_FOR_PLAYER;
+
+        this.state =
+            BATTLE_STATES.WAITING_FOR_PLAYER;
 
         renderBattleScreen();
 
@@ -480,7 +513,8 @@ class BattleManager {
     }
 }
 
-const battleManager = new BattleManager();
+const battleManager =
+    new BattleManager();
 
 /* --------------------------------------------------
    HTML References
@@ -563,12 +597,7 @@ function removeTypeClasses(element) {
         "type-fire",
         "type-water",
         "type-grass",
-        "type-electric",
-        "type-ground",
-        "type-ice",
-        "type-flying",
-        "type-dark",
-        "type-normal"
+        "type-electric"
     ];
 
     element.classList.remove(...typeClasses);
@@ -587,37 +616,87 @@ function getHPColorClass(hpPercentage) {
 }
 
 /* --------------------------------------------------
-   Pokemon Status Rendering
+   Pixel Sprite Rendering
+-------------------------------------------------- */
+
+function renderPixelSprite(
+    spriteElement,
+    pokemon,
+    side
+) {
+    /*
+        Commit 1 used nested CSS shapes inside these
+        containers. They are removed when the PNG
+        sprites are first rendered.
+    */
+
+    spriteElement.innerHTML = "";
+
+    spriteElement.className =
+        `monster-sprite pixel-sprite ${side}-sprite`;
+
+    spriteElement.style.backgroundImage =
+        `url("${pokemon.spritePath}")`;
+
+    spriteElement.setAttribute(
+        "role",
+        "img"
+    );
+
+    spriteElement.setAttribute(
+        "aria-label",
+        `${pokemon.name}, the ${side} creature`
+    );
+}
+
+/* --------------------------------------------------
+   Creature Status Rendering
 -------------------------------------------------- */
 
 function renderPokemonStatus(pokemon, side) {
-    const isPlayer = side === "player";
+    const isPlayer =
+        side === "player";
 
     const nameElement =
-        isPlayer ? playerName : opponentName;
+        isPlayer
+            ? playerName
+            : opponentName;
 
     const levelElement =
-        isPlayer ? playerLevel : opponentLevel;
+        isPlayer
+            ? playerLevel
+            : opponentLevel;
 
     const typeElement =
-        isPlayer ? playerType : opponentType;
+        isPlayer
+            ? playerType
+            : opponentType;
 
     const hpTrackElement =
-        isPlayer ? playerHPTrack : opponentHPTrack;
+        isPlayer
+            ? playerHPTrack
+            : opponentHPTrack;
 
     const hpBarElement =
-        isPlayer ? playerHPBar : opponentHPBar;
+        isPlayer
+            ? playerHPBar
+            : opponentHPBar;
 
     const hpTextElement =
-        isPlayer ? playerHPText : opponentHPText;
+        isPlayer
+            ? playerHPText
+            : opponentHPText;
 
     const spriteElement =
-        isPlayer ? playerSprite : opponentSprite;
+        isPlayer
+            ? playerSprite
+            : opponentSprite;
 
     const hpPercentage =
         pokemon.getHPPercentage();
 
-    nameElement.textContent = pokemon.name;
+    nameElement.textContent =
+        pokemon.name;
 
     levelElement.textContent =
         `Lv. ${pokemon.level}`;
@@ -657,14 +736,10 @@ function renderPokemonStatus(pokemon, side) {
     hpTextElement.textContent =
         `${pokemon.currentHP} / ${pokemon.maxHP}`;
 
-    spriteElement.className =
-        `monster-sprite ${pokemon.spriteClass}`;
-
-    spriteElement.setAttribute(
-        "aria-label",
-        `${pokemon.name}, the ${
-            isPlayer ? "player" : "opponent"
-        } monster`
+    renderPixelSprite(
+        spriteElement,
+        pokemon,
+        side
     );
 }
 
@@ -679,9 +754,11 @@ function createMoveButton(move, index) {
     button.className =
         `move-button type-${move.type}`;
 
-    button.type = "button";
+    button.type =
+        "button";
 
-    button.dataset.moveIndex = index;
+    button.dataset.moveIndex =
+        index;
 
     button.disabled =
         !move.hasPP() ||
@@ -690,13 +767,17 @@ function createMoveButton(move, index) {
     const moveName =
         document.createElement("span");
 
-    moveName.className = "move-name";
-    moveName.textContent = move.name;
+    moveName.className =
+        "move-name";
+
+    moveName.textContent =
+        move.name;
 
     const moveDetails =
         document.createElement("span");
 
-    moveDetails.className = "move-details";
+    moveDetails.className =
+        "move-details";
 
     moveDetails.textContent =
         `${formatTypeName(move.type)} | ` +
@@ -719,17 +800,26 @@ function createMoveButton(move, index) {
 function renderMoveButtons(pokemon) {
     moveGrid.innerHTML = "";
 
-    pokemon.moves.forEach((move, index) => {
-        const moveButton =
-            createMoveButton(move, index);
+    pokemon.moves.forEach(
+        (move, index) => {
+            const moveButton =
+                createMoveButton(
+                    move,
+                    index
+                );
 
-        moveGrid.appendChild(moveButton);
-    });
+            moveGrid.appendChild(
+                moveButton
+            );
+        }
+    );
 }
 
 function disableMoveButtons() {
     const moveButtons =
-        moveGrid.querySelectorAll(".move-button");
+        moveGrid.querySelectorAll(
+            ".move-button"
+        );
 
     moveButtons.forEach((button) => {
         button.disabled = true;
@@ -747,15 +837,24 @@ function createTeamSlot(
     const slot =
         document.createElement("span");
 
-    slot.className = "team-slot";
-    slot.title = pokemon.name;
+    slot.className =
+        `team-slot type-${pokemon.type}`;
+
+    slot.title =
+        `${pokemon.name} (${formatTypeName(
+            pokemon.type
+        )})`;
 
     if (pokemon === activePokemon) {
-        slot.classList.add("active-slot");
+        slot.classList.add(
+            "active-slot"
+        );
     }
 
     if (pokemon.isFainted) {
-        slot.classList.add("fainted-slot");
+        slot.classList.add(
+            "fainted-slot"
+        );
     }
 
     return slot;
@@ -769,12 +868,15 @@ function renderTeamSlots(
     containerElement.innerHTML = "";
 
     team.forEach((pokemon) => {
-        const slot = createTeamSlot(
-            pokemon,
-            activePokemon
-        );
+        const slot =
+            createTeamSlot(
+                pokemon,
+                activePokemon
+            );
 
-        containerElement.appendChild(slot);
+        containerElement.appendChild(
+            slot
+        );
     });
 }
 
@@ -818,18 +920,22 @@ function handleMoveButtonClick(event) {
     const selectedButton =
         event.currentTarget;
 
-    const moveIndex = Number(
-        selectedButton.dataset.moveIndex
-    );
+    const moveIndex =
+        Number(
+            selectedButton.dataset.moveIndex
+        );
 
     if (!Number.isInteger(moveIndex)) {
         console.error(
             "Move button did not contain a valid move index."
         );
+
         return;
     }
 
-    battleManager.selectPlayerMove(moveIndex);
+    battleManager.selectPlayerMove(
+        moveIndex
+    );
 }
 
 /* --------------------------------------------------
@@ -846,8 +952,11 @@ function resetBattle() {
     resetTeam(playerTeam);
     resetTeam(opponentTeam);
 
-    activePlayerPokemon = playerTeam[0];
-    activeOpponentPokemon = opponentTeam[0];
+    activePlayerPokemon =
+        playerTeam[0];
+
+    activeOpponentPokemon =
+        opponentTeam[0];
 
     battleManager.reset();
 
@@ -874,20 +983,12 @@ function initializeGame() {
     );
 
     console.log(
-        "Pocket Clash Battle Manager initialized."
+        "Pocket Clash four-type roster initialized."
     );
 
     console.log(
-        "Available Pokemon:",
+        "Available creatures:",
         POKEMON_DATABASE
-    );
-
-    console.log(
-        "Fire against Grass:",
-        getTypeEffectiveness(
-            "fire",
-            "grass"
-        )
     );
 }
 
