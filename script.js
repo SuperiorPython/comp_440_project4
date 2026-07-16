@@ -1,19 +1,32 @@
 "use strict";
 
 /*
-    Pocket Clash - Commit 6
+    Pocket Clash - Commit 7
 
     This commit adds:
-    - Speed-based turn order
-    - Complete turn resolution
-    - PP consumption
-    - Damage calculation
-    - Type effectiveness
-    - Fainting
-    - Automatic switching
-    - Victory and defeat states
-    - Restart support
+    - Player team selection
+    - Four selectable creatures
+    - Exactly two creatures per team
+    - Independently randomized opponent team
+    - Mirror match support
+    - Separate creature instances for both teams
+    - Restart returning to team selection
 */
+
+/* --------------------------------------------------
+   Constants
+-------------------------------------------------- */
+
+const TEAM_SIZE = 2;
+
+const BATTLE_STATES = {
+    TEAM_SELECTION: "team-selection",
+    WAITING_FOR_PLAYER: "waiting-for-player",
+    SELECTING_OPPONENT_MOVE: "selecting-opponent-move",
+    RESOLVING_TURN: "resolving-turn",
+    SWITCHING: "switching",
+    BATTLE_OVER: "battle-over"
+};
 
 /* --------------------------------------------------
    Data Models
@@ -44,10 +57,20 @@ class Move {
     resetPP() {
         this.currentPP = this.maxPP;
     }
+
+    clone() {
+        return new Move(
+            this.name,
+            this.type,
+            this.power,
+            this.maxPP
+        );
+    }
 }
 
 class Pokemon {
     constructor(
+        id,
         name,
         type,
         maxHP,
@@ -58,6 +81,7 @@ class Pokemon {
         spritePath,
         moves
     ) {
+        this.id = id;
         this.name = name;
         this.type = type;
         this.maxHP = maxHP;
@@ -113,6 +137,60 @@ class Pokemon {
             move.resetPP();
         });
     }
+
+    clone() {
+        return new Pokemon(
+            this.id,
+            this.name,
+            this.type,
+            this.maxHP,
+            this.attack,
+            this.defense,
+            this.speed,
+            this.level,
+            this.spritePath,
+            this.moves.map((move) => move.clone())
+        );
+    }
+}
+
+/* --------------------------------------------------
+   Factories
+-------------------------------------------------- */
+
+function createMove(name, type, power, maxPP) {
+    return new Move(
+        name,
+        type,
+        power,
+        maxPP
+    );
+}
+
+function createPokemon(
+    id,
+    name,
+    type,
+    maxHP,
+    attack,
+    defense,
+    speed,
+    level,
+    spritePath,
+    moves
+) {
+    return new Pokemon(
+        id,
+        name,
+        type,
+        maxHP,
+        attack,
+        defense,
+        speed,
+        level,
+        spritePath,
+        moves
+    );
 }
 
 /* --------------------------------------------------
@@ -218,24 +296,20 @@ function calculateDamage(
 }
 
 /* --------------------------------------------------
-   Factories
+   Creature Templates
 -------------------------------------------------- */
 
-function createMove(name, type, power, maxPP) {
-    return new Move(
-        name,
-        type,
-        power,
-        maxPP
-    );
-}
+/*
+    These objects act as templates.
 
-/* --------------------------------------------------
-   Creature Database
--------------------------------------------------- */
+    New clones are created whenever a team is built.
+    This prevents mirror-match creatures from sharing
+    HP, PP, or fainted state.
+*/
 
 const POKEMON_DATABASE = {
-    cindervex: new Pokemon(
+    cindervex: createPokemon(
+        "cindervex",
         "Cindervex",
         "fire",
         110,
@@ -272,7 +346,8 @@ const POKEMON_DATABASE = {
         ]
     ),
 
-    tidelume: new Pokemon(
+    tidelume: createPokemon(
+        "tidelume",
         "Tidelume",
         "water",
         122,
@@ -309,7 +384,8 @@ const POKEMON_DATABASE = {
         ]
     ),
 
-    bramblehorn: new Pokemon(
+    bramblehorn: createPokemon(
+        "bramblehorn",
         "Bramblehorn",
         "grass",
         132,
@@ -346,7 +422,8 @@ const POKEMON_DATABASE = {
         ]
     ),
 
-    voltari: new Pokemon(
+    voltari: createPokemon(
+        "voltari",
         "Voltari",
         "electric",
         98,
@@ -384,50 +461,59 @@ const POKEMON_DATABASE = {
     )
 };
 
-/* --------------------------------------------------
-   Starting Teams
--------------------------------------------------- */
-
-const playerTeam = [
-    POKEMON_DATABASE.cindervex,
-    POKEMON_DATABASE.tidelume
-];
-
-const opponentTeam = [
-    POKEMON_DATABASE.bramblehorn,
-    POKEMON_DATABASE.voltari
-];
-
-let activePlayerPokemon =
-    playerTeam[0];
-
-let activeOpponentPokemon =
-    opponentTeam[0];
+const POKEMON_ROSTER =
+    Object.values(POKEMON_DATABASE);
 
 /* --------------------------------------------------
-   Battle States
+   Game State
 -------------------------------------------------- */
 
-const BATTLE_STATES = {
-    WAITING_FOR_PLAYER:
-        "waiting-for-player",
+let selectedPokemonIds = [];
 
-    SELECTING_OPPONENT_MOVE:
-        "selecting-opponent-move",
+let playerTeam = [];
+let opponentTeam = [];
 
-    RESOLVING_TURN:
-        "resolving-turn",
-
-    SWITCHING:
-        "switching",
-
-    BATTLE_OVER:
-        "battle-over"
-};
+let activePlayerPokemon = null;
+let activeOpponentPokemon = null;
 
 /* --------------------------------------------------
    HTML References
 -------------------------------------------------- */
+
+const teamSelectionScreen =
+    document.getElementById(
+        "team-selection-screen"
+    );
+
+const battleInterface =
+    document.getElementById(
+        "battle-interface"
+    );
+
+const creatureSelectionGrid =
+    document.getElementById(
+        "creature-selection-grid"
+    );
+
+const selectionCount =
+    document.getElementById(
+        "selection-count"
+    );
+
+const selectedTeamPreview =
+    document.getElementById(
+        "selected-team-preview"
+    );
+
+const selectionMessage =
+    document.getElementById(
+        "selection-message"
+    );
+
+const startBattleButton =
+    document.getElementById(
+        "start-battle-button"
+    );
 
 const battleMessage =
     document.getElementById(
@@ -549,6 +635,11 @@ function showBattleMessage(message) {
         message;
 }
 
+function showSelectionMessage(message) {
+    selectionMessage.textContent =
+        message;
+}
+
 function removeTypeClasses(element) {
     const typeClasses = [
         "type-fire",
@@ -584,6 +675,357 @@ function isTeamDefeated(team) {
     return team.every((pokemon) => {
         return pokemon.isFainted;
     });
+}
+
+function shuffleArray(array) {
+    const shuffled = [...array];
+
+    for (
+        let index = shuffled.length - 1;
+        index > 0;
+        index -= 1
+    ) {
+        const randomIndex = Math.floor(
+            Math.random() * (index + 1)
+        );
+
+        [
+            shuffled[index],
+            shuffled[randomIndex]
+        ] = [
+            shuffled[randomIndex],
+            shuffled[index]
+        ];
+    }
+
+    return shuffled;
+}
+
+function clonePokemonById(pokemonId) {
+    const template =
+        POKEMON_DATABASE[pokemonId];
+
+    if (!template) {
+        throw new Error(
+            `Unknown creature ID: ${pokemonId}`
+        );
+    }
+
+    return template.clone();
+}
+
+/* --------------------------------------------------
+   Team Selection
+-------------------------------------------------- */
+
+function createCreatureSelectionCard(pokemon) {
+    const card =
+        document.createElement("button");
+
+    card.type = "button";
+
+    card.className =
+        `creature-card type-border-${pokemon.type}`;
+
+    card.dataset.pokemonId =
+        pokemon.id;
+
+    card.setAttribute(
+        "aria-pressed",
+        "false"
+    );
+
+    const sprite =
+        document.createElement("div");
+
+    sprite.className =
+        "selection-sprite";
+
+    sprite.style.backgroundImage =
+        `url("${pokemon.spritePath}")`;
+
+    sprite.setAttribute(
+        "role",
+        "img"
+    );
+
+    sprite.setAttribute(
+        "aria-label",
+        pokemon.name
+    );
+
+    const information =
+        document.createElement("div");
+
+    information.className =
+        "creature-card-information";
+
+    const name =
+        document.createElement("h3");
+
+    name.textContent =
+        pokemon.name;
+
+    const type =
+        document.createElement("span");
+
+    type.className =
+        `type-badge type-${pokemon.type}`;
+
+    type.textContent =
+        formatTypeName(pokemon.type);
+
+    const stats =
+        document.createElement("p");
+
+    stats.className =
+        "creature-card-stats";
+
+    stats.textContent =
+        `HP ${pokemon.maxHP} | ` +
+        `ATK ${pokemon.attack} | ` +
+        `DEF ${pokemon.defense} | ` +
+        `SPD ${pokemon.speed}`;
+
+    information.append(
+        name,
+        type,
+        stats
+    );
+
+    card.append(
+        sprite,
+        information
+    );
+
+    card.addEventListener(
+        "click",
+        handleCreatureCardClick
+    );
+
+    return card;
+}
+
+function renderCreatureSelectionGrid() {
+    creatureSelectionGrid.innerHTML = "";
+
+    POKEMON_ROSTER.forEach((pokemon) => {
+        const card =
+            createCreatureSelectionCard(
+                pokemon
+            );
+
+        creatureSelectionGrid.appendChild(
+            card
+        );
+    });
+}
+
+function handleCreatureCardClick(event) {
+    const card =
+        event.currentTarget;
+
+    const pokemonId =
+        card.dataset.pokemonId;
+
+    if (!pokemonId) {
+        return;
+    }
+
+    if (
+        selectedPokemonIds.includes(
+            pokemonId
+        )
+    ) {
+        selectedPokemonIds =
+            selectedPokemonIds.filter(
+                (selectedId) => {
+                    return selectedId !== pokemonId;
+                }
+            );
+    } else {
+        if (
+            selectedPokemonIds.length >=
+            TEAM_SIZE
+        ) {
+            showSelectionMessage(
+                "Your team already has two creatures. Deselect one before choosing another."
+            );
+
+            return;
+        }
+
+        selectedPokemonIds.push(
+            pokemonId
+        );
+    }
+
+    renderSelectionState();
+}
+
+function renderSelectionState() {
+    const cards =
+        creatureSelectionGrid.querySelectorAll(
+            ".creature-card"
+        );
+
+    cards.forEach((card) => {
+        const pokemonId =
+            card.dataset.pokemonId;
+
+        const isSelected =
+            selectedPokemonIds.includes(
+                pokemonId
+            );
+
+        card.classList.toggle(
+            "selected-creature-card",
+            isSelected
+        );
+
+        card.setAttribute(
+            "aria-pressed",
+            String(isSelected)
+        );
+    });
+
+    selectionCount.textContent =
+        `${selectedPokemonIds.length} / ${TEAM_SIZE}`;
+
+    renderSelectedTeamPreview();
+
+    const hasFullTeam =
+        selectedPokemonIds.length ===
+        TEAM_SIZE;
+
+    startBattleButton.disabled =
+        !hasFullTeam;
+
+    if (
+        selectedPokemonIds.length === 0
+    ) {
+        showSelectionMessage(
+            "Choose your first creature."
+        );
+    } else if (
+        selectedPokemonIds.length === 1
+    ) {
+        showSelectionMessage(
+            "Choose one more creature."
+        );
+    } else {
+        showSelectionMessage(
+            "Your team is ready."
+        );
+    }
+}
+
+function renderSelectedTeamPreview() {
+    selectedTeamPreview.innerHTML = "";
+
+    for (
+        let index = 0;
+        index < TEAM_SIZE;
+        index += 1
+    ) {
+        const pokemonId =
+            selectedPokemonIds[index];
+
+        const slot =
+            document.createElement("span");
+
+        slot.className =
+            "preview-slot";
+
+        if (pokemonId) {
+            const pokemon =
+                POKEMON_DATABASE[pokemonId];
+
+            slot.classList.add(
+                `type-${pokemon.type}`
+            );
+
+            slot.textContent =
+                pokemon.name;
+        } else {
+            slot.textContent =
+                "Empty";
+        }
+
+        selectedTeamPreview.appendChild(
+            slot
+        );
+    }
+}
+
+function createPlayerTeam() {
+    return selectedPokemonIds.map(
+        (pokemonId) => {
+            return clonePokemonById(
+                pokemonId
+            );
+        }
+    );
+}
+
+function createOpponentTeam() {
+    const randomizedRoster =
+        shuffleArray(POKEMON_ROSTER);
+
+    return randomizedRoster
+        .slice(0, TEAM_SIZE)
+        .map((pokemon) => {
+            return pokemon.clone();
+        });
+}
+
+function startBattleFromSelection() {
+    if (
+        selectedPokemonIds.length !==
+        TEAM_SIZE
+    ) {
+        showSelectionMessage(
+            "Select exactly two creatures before starting."
+        );
+
+        return;
+    }
+
+    playerTeam =
+        createPlayerTeam();
+
+    opponentTeam =
+        createOpponentTeam();
+
+    activePlayerPokemon =
+        playerTeam[0];
+
+    activeOpponentPokemon =
+        opponentTeam[0];
+
+    teamSelectionScreen.classList.add(
+        "hidden"
+    );
+
+    battleInterface.classList.remove(
+        "hidden"
+    );
+
+    battleManager.startBattle();
+
+    console.log(
+        "Player team:",
+        playerTeam.map(
+            (pokemon) => pokemon.name
+        )
+    );
+
+    console.log(
+        "Opponent team:",
+        opponentTeam.map(
+            (pokemon) => pokemon.name
+        )
+    );
 }
 
 /* --------------------------------------------------
@@ -783,15 +1225,12 @@ function createMoveButton(
     index
 ) {
     const button =
-        document.createElement(
-            "button"
-        );
+        document.createElement("button");
 
     button.className =
         `move-button type-${move.type}`;
 
-    button.type =
-        "button";
+    button.type = "button";
 
     button.dataset.moveIndex =
         index;
@@ -801,9 +1240,7 @@ function createMoveButton(
         !battleManager.canPlayerSelectMove();
 
     const moveName =
-        document.createElement(
-            "span"
-        );
+        document.createElement("span");
 
     moveName.className =
         "move-name";
@@ -812,9 +1249,7 @@ function createMoveButton(
         move.name;
 
     const moveDetails =
-        document.createElement(
-            "span"
-        );
+        document.createElement("span");
 
     moveDetails.className =
         "move-details";
@@ -876,9 +1311,7 @@ function createTeamSlot(
     activePokemon
 ) {
     const slot =
-        document.createElement(
-            "span"
-        );
+        document.createElement("span");
 
     slot.className =
         `team-slot type-${pokemon.type}`;
@@ -909,8 +1342,7 @@ function renderTeamSlots(
     activePokemon,
     containerElement
 ) {
-    containerElement.innerHTML =
-        "";
+    containerElement.innerHTML = "";
 
     team.forEach((pokemon) => {
         const slot =
@@ -930,6 +1362,13 @@ function renderTeamSlots(
 -------------------------------------------------- */
 
 function renderBattleScreen() {
+    if (
+        !activePlayerPokemon ||
+        !activeOpponentPokemon
+    ) {
+        return;
+    }
+
     renderPokemonStatus(
         activePlayerPokemon,
         "player"
@@ -964,26 +1403,43 @@ function renderBattleScreen() {
 class BattleManager {
     constructor() {
         this.state =
-            BATTLE_STATES.WAITING_FOR_PLAYER;
+            BATTLE_STATES.TEAM_SELECTION;
 
         this.turnNumber = 1;
         this.playerMove = null;
         this.opponentMove = null;
     }
 
-    reset() {
+    resetToSelection() {
+        this.state =
+            BATTLE_STATES.TEAM_SELECTION;
+
+        this.turnNumber = 1;
+        this.playerMove = null;
+        this.opponentMove = null;
+    }
+
+    startBattle() {
         this.state =
             BATTLE_STATES.WAITING_FOR_PLAYER;
 
         this.turnNumber = 1;
         this.playerMove = null;
         this.opponentMove = null;
+
+        renderBattleScreen();
+
+        showBattleMessage(
+            `Turn 1: What will ` +
+            `${activePlayerPokemon.name} do?`
+        );
     }
 
     canPlayerSelectMove() {
         return (
             this.state ===
                 BATTLE_STATES.WAITING_FOR_PLAYER &&
+            activePlayerPokemon &&
             !activePlayerPokemon.isFainted
         );
     }
@@ -1076,16 +1532,14 @@ class BattleManager {
             attacker: activePlayerPokemon,
             defender: activeOpponentPokemon,
             move: this.playerMove,
-            defenderSide: "opponent",
-            side: "player"
+            defenderSide: "opponent"
         };
 
         const opponentAction = {
             attacker: activeOpponentPokemon,
             defender: activePlayerPokemon,
             move: this.opponentMove,
-            defenderSide: "player",
-            side: "opponent"
+            defenderSide: "player"
         };
 
         const turnActions =
@@ -1123,12 +1577,6 @@ class BattleManager {
                     return;
                 }
 
-                /*
-                    The second action is skipped if its
-                    original attacker fainted before it
-                    could move.
-                */
-
                 break;
             }
         }
@@ -1160,14 +1608,7 @@ class BattleManager {
             ];
         }
 
-        /*
-            Equal Speed uses a random tie-breaker.
-        */
-
-        const playerGoesFirst =
-            Math.random() < 0.5;
-
-        if (playerGoesFirst) {
+        if (Math.random() < 0.5) {
             return [
                 playerAction,
                 opponentAction
@@ -1257,8 +1698,8 @@ class BattleManager {
             defender: defender.name,
             attackerSpeed: attacker.speed,
             move: move.name,
-            movePower: move.power,
-            typeMultiplier:
+            power: move.power,
+            multiplier:
                 result.typeMultiplier,
             damage: actualDamage,
             defenderHP:
@@ -1300,53 +1741,43 @@ class BattleManager {
                 return true;
             }
 
-            const replacement =
+            activePlayerPokemon =
                 getFirstAvailablePokemon(
                     playerTeam
                 );
 
-            if (replacement) {
-                this.state =
-                    BATTLE_STATES.SWITCHING;
+            this.state =
+                BATTLE_STATES.SWITCHING;
 
-                activePlayerPokemon =
-                    replacement;
+            renderBattleScreen();
 
-                showBattleMessage(
-                    `Go, ${activePlayerPokemon.name}!`
-                );
+            showBattleMessage(
+                `Go, ${activePlayerPokemon.name}!`
+            );
 
-                renderBattleScreen();
-
-                await wait(1200);
-            }
+            await wait(1200);
         } else {
             if (isTeamDefeated(opponentTeam)) {
                 this.endBattle("victory");
                 return true;
             }
 
-            const replacement =
+            activeOpponentPokemon =
                 getFirstAvailablePokemon(
                     opponentTeam
                 );
 
-            if (replacement) {
-                this.state =
-                    BATTLE_STATES.SWITCHING;
+            this.state =
+                BATTLE_STATES.SWITCHING;
 
-                activeOpponentPokemon =
-                    replacement;
+            renderBattleScreen();
 
-                showBattleMessage(
-                    `The opponent sent out ` +
-                    `${activeOpponentPokemon.name}!`
-                );
+            showBattleMessage(
+                `The opponent sent out ` +
+                `${activeOpponentPokemon.name}!`
+            );
 
-                renderBattleScreen();
-
-                await wait(1200);
-            }
+            await wait(1200);
         }
 
         return false;
@@ -1361,7 +1792,6 @@ class BattleManager {
         }
 
         this.turnNumber += 1;
-
         this.playerMove = null;
         this.opponentMove = null;
 
@@ -1383,19 +1813,8 @@ class BattleManager {
         this.playerMove = null;
         this.opponentMove = null;
 
+        renderBattleScreen();
         disableMoveButtons();
-
-        renderTeamSlots(
-            playerTeam,
-            activePlayerPokemon,
-            playerTeamSlots
-        );
-
-        renderTeamSlots(
-            opponentTeam,
-            activeOpponentPokemon,
-            opponentTeamSlots
-        );
 
         if (result === "victory") {
             showBattleMessage(
@@ -1406,10 +1825,6 @@ class BattleManager {
                 "Defeat! Your team has no creatures left."
             );
         }
-
-        console.log(
-            `Battle ended with result: ${result}`
-        );
     }
 }
 
@@ -1444,51 +1859,54 @@ function handleMoveButtonClick(event) {
 }
 
 /* --------------------------------------------------
-   Reset and Initialization
+   Restart and Initialization
 -------------------------------------------------- */
 
-function resetTeam(team) {
-    team.forEach((pokemon) => {
-        pokemon.reset();
-    });
-}
+function returnToTeamSelection() {
+    selectedPokemonIds = [];
 
-function resetBattle() {
-    resetTeam(playerTeam);
-    resetTeam(opponentTeam);
+    playerTeam = [];
+    opponentTeam = [];
 
-    activePlayerPokemon =
-        playerTeam[0];
+    activePlayerPokemon = null;
+    activeOpponentPokemon = null;
 
-    activeOpponentPokemon =
-        opponentTeam[0];
+    battleManager.resetToSelection();
 
-    battleManager.reset();
+    battleInterface.classList.add(
+        "hidden"
+    );
 
-    renderBattleScreen();
+    teamSelectionScreen.classList.remove(
+        "hidden"
+    );
 
-    showBattleMessage(
-        `Turn 1: What will ` +
-        `${activePlayerPokemon.name} do?`
+    renderCreatureSelectionGrid();
+    renderSelectionState();
+
+    showSelectionMessage(
+        "Choose your first creature."
     );
 
     console.log(
-        "Pocket Clash battle reset."
+        "Returned to team selection."
     );
 }
 
 function initializeGame() {
-    battleManager.reset();
+    renderCreatureSelectionGrid();
+    renderSelectionState();
 
-    renderBattleScreen();
+    teamSelectionScreen.classList.remove(
+        "hidden"
+    );
 
-    showBattleMessage(
-        `Turn 1: What will ` +
-        `${activePlayerPokemon.name} do?`
+    battleInterface.classList.add(
+        "hidden"
     );
 
     console.log(
-        "Pocket Clash full battle loop initialized."
+        "Pocket Clash team selection initialized."
     );
 }
 
@@ -1496,9 +1914,14 @@ function initializeGame() {
    Event Listeners
 -------------------------------------------------- */
 
+startBattleButton.addEventListener(
+    "click",
+    startBattleFromSelection
+);
+
 restartButton.addEventListener(
     "click",
-    resetBattle
+    returnToTeamSelection
 );
 
 /* --------------------------------------------------

@@ -10,7 +10,7 @@
 
     <meta
         name="description"
-        content="Pocket Clash, a turn-based monster battle vertical slice for COMP 440."
+        content="Pocket Clash, a turn-based pixel monster battle vertical slice for COMP 440."
     >
 
     <title>Pocket Clash</title>
@@ -24,7 +24,10 @@
         <!-- Game title and controls -->
         <header class="game-header">
             <div>
-                <p class="eyebrow">COMP 440 | Project 4</p>
+                <p class="eyebrow">
+                    COMP 440 | Project 4
+                </p>
+
                 <h1>Pocket Clash</h1>
             </div>
 
@@ -33,254 +36,298 @@
                 class="secondary-button"
                 type="button"
             >
-                Restart Battle
+                Restart
             </button>
         </header>
 
-        <!-- Main battle arena -->
+        <!-- Team Selection Screen -->
         <section
-            id="battle-screen"
-            class="battle-screen"
-            aria-label="Pocket Clash battle arena"
+            id="team-selection-screen"
+            class="team-selection-screen"
+            aria-labelledby="team-selection-title"
         >
+            <div class="selection-heading">
+                <p class="selection-label">
+                    Build Your Team
+                </p>
 
-            <!-- Decorative battle background -->
-            <div
-                class="battle-background"
-                aria-hidden="true"
-            >
-                <div class="sky-layer"></div>
-                <div class="far-hills"></div>
-                <div class="ground-layer"></div>
-            </div>
+                <h2 id="team-selection-title">
+                    Choose Two Creatures
+                </h2>
 
-            <!-- Opponent combatant -->
-            <section class="combatant combatant-opponent">
-
-                <article class="status-card opponent-status">
-
-                    <div class="status-heading">
-                        <div>
-                            <p class="trainer-label">Opponent</p>
-
-                            <h2 id="opponent-name">
-                                Opponent Monster
-                            </h2>
-                        </div>
-
-                        <span
-                            id="opponent-level"
-                            class="level-label"
-                        >
-                            Lv. 1
-                        </span>
-                    </div>
-
-                    <div class="type-row">
-                        <span
-                            id="opponent-type"
-                            class="type-badge type-normal"
-                        >
-                            Normal
-                        </span>
-                    </div>
-
-                    <div class="hp-row">
-                        <span class="hp-label">HP</span>
-
-                        <div
-                            id="opponent-hp-track"
-                            class="hp-track"
-                            role="progressbar"
-                            aria-label="Opponent HP"
-                            aria-valuemin="0"
-                            aria-valuemax="100"
-                            aria-valuenow="100"
-                        >
-                            <div
-                                id="opponent-hp-bar"
-                                class="hp-fill"
-                                style="width: 100%;"
-                            ></div>
-                        </div>
-                    </div>
-
-                    <p
-                        id="opponent-hp-text"
-                        class="hp-text"
-                    >
-                        0 / 0
-                    </p>
-                </article>
-
-                <div class="sprite-platform opponent-platform">
-
-                    <div
-                        id="opponent-sprite"
-                        class="monster-sprite"
-                        role="img"
-                        aria-label="Opponent monster"
-                    >
-                        <span class="sprite-body"></span>
-
-                        <span
-                            class="sprite-eye sprite-eye-left"
-                        ></span>
-
-                        <span
-                            class="sprite-eye sprite-eye-right"
-                        ></span>
-
-                        <span
-                            class="sprite-detail sprite-detail-one"
-                        ></span>
-
-                        <span
-                            class="sprite-detail sprite-detail-two"
-                        ></span>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Player combatant -->
-            <section class="combatant combatant-player">
-
-                <div class="sprite-platform player-platform">
-
-                    <div
-                        id="player-sprite"
-                        class="monster-sprite"
-                        role="img"
-                        aria-label="Player monster"
-                    >
-                        <span class="sprite-body"></span>
-
-                        <span
-                            class="sprite-eye sprite-eye-left"
-                        ></span>
-
-                        <span
-                            class="sprite-eye sprite-eye-right"
-                        ></span>
-
-                        <span
-                            class="sprite-detail sprite-detail-one"
-                        ></span>
-
-                        <span
-                            class="sprite-detail sprite-detail-two"
-                        ></span>
-                    </div>
-                </div>
-
-                <article class="status-card player-status">
-
-                    <div class="status-heading">
-                        <div>
-                            <p class="trainer-label">Your Monster</p>
-
-                            <h2 id="player-name">
-                                Player Monster
-                            </h2>
-                        </div>
-
-                        <span
-                            id="player-level"
-                            class="level-label"
-                        >
-                            Lv. 1
-                        </span>
-                    </div>
-
-                    <div class="type-row">
-                        <span
-                            id="player-type"
-                            class="type-badge type-normal"
-                        >
-                            Normal
-                        </span>
-                    </div>
-
-                    <div class="hp-row">
-                        <span class="hp-label">HP</span>
-
-                        <div
-                            id="player-hp-track"
-                            class="hp-track"
-                            role="progressbar"
-                            aria-label="Player HP"
-                            aria-valuemin="0"
-                            aria-valuemax="100"
-                            aria-valuenow="100"
-                        >
-                            <div
-                                id="player-hp-bar"
-                                class="hp-fill"
-                                style="width: 100%;"
-                            ></div>
-                        </div>
-                    </div>
-
-                    <p
-                        id="player-hp-text"
-                        class="hp-text"
-                    >
-                        0 / 0
-                    </p>
-                </article>
-            </section>
-        </section>
-
-        <!-- Battle message and move menu -->
-        <section
-            class="command-panel"
-            aria-label="Battle commands"
-        >
-
-            <div class="message-box">
-                <p
-                    id="battle-message"
-                    aria-live="polite"
-                >
-                    Preparing the battle...
+                <p class="selection-instructions">
+                    Select exactly two creatures for your team.
+                    The opponent will independently choose two
+                    creatures from the same roster.
                 </p>
             </div>
 
-            <!-- Move buttons will be generated from JavaScript -->
             <div
-                id="move-grid"
-                class="move-grid"
-                aria-label="Available moves"
-            ></div>
+                id="creature-selection-grid"
+                class="creature-selection-grid"
+                aria-label="Available creatures"
+            >
+                <!-- Creature cards are generated by JavaScript -->
+            </div>
+
+            <div class="selection-footer">
+                <div class="selection-status">
+                    <span class="selection-status-label">
+                        Selected:
+                    </span>
+
+                    <span id="selection-count">
+                        0 / 2
+                    </span>
+                </div>
+
+                <div
+                    id="selected-team-preview"
+                    class="selected-team-preview"
+                    aria-label="Selected player team"
+                >
+                    <span class="preview-slot">
+                        Empty
+                    </span>
+
+                    <span class="preview-slot">
+                        Empty
+                    </span>
+                </div>
+
+                <p
+                    id="selection-message"
+                    class="selection-message"
+                    aria-live="polite"
+                >
+                    Choose your first creature.
+                </p>
+
+                <button
+                    id="start-battle-button"
+                    class="start-battle-button"
+                    type="button"
+                    disabled
+                >
+                    Start Battle
+                </button>
+            </div>
         </section>
 
-        <!-- Team status -->
-        <footer class="team-strip">
+        <!-- Battle Interface -->
+        <section
+            id="battle-interface"
+            class="battle-interface hidden"
+        >
+            <!-- Main battle arena -->
+            <section
+                id="battle-screen"
+                class="battle-screen"
+                aria-label="Pocket Clash battle arena"
+            >
+                <!-- Decorative battle background -->
+                <div
+                    class="battle-background"
+                    aria-hidden="true"
+                >
+                    <div class="sky-layer"></div>
+                    <div class="far-hills"></div>
+                    <div class="ground-layer"></div>
+                </div>
 
-            <div class="team-group">
-                <span class="team-label">
-                    Your Team
-                </span>
+                <!-- Opponent combatant -->
+                <section class="combatant combatant-opponent">
+                    <article class="status-card opponent-status">
+                        <div class="status-heading">
+                            <div>
+                                <p class="trainer-label">
+                                    Opponent
+                                </p>
+
+                                <h2 id="opponent-name">
+                                    Opponent Creature
+                                </h2>
+                            </div>
+
+                            <span
+                                id="opponent-level"
+                                class="level-label"
+                            >
+                                Lv. 1
+                            </span>
+                        </div>
+
+                        <div class="type-row">
+                            <span
+                                id="opponent-type"
+                                class="type-badge type-fire"
+                            >
+                                Fire
+                            </span>
+                        </div>
+
+                        <div class="hp-row">
+                            <span class="hp-label">
+                                HP
+                            </span>
+
+                            <div
+                                id="opponent-hp-track"
+                                class="hp-track"
+                                role="progressbar"
+                                aria-label="Opponent HP"
+                                aria-valuemin="0"
+                                aria-valuemax="100"
+                                aria-valuenow="100"
+                            >
+                                <div
+                                    id="opponent-hp-bar"
+                                    class="hp-fill hp-high"
+                                    style="width: 100%;"
+                                ></div>
+                            </div>
+                        </div>
+
+                        <p
+                            id="opponent-hp-text"
+                            class="hp-text"
+                        >
+                            0 / 0
+                        </p>
+                    </article>
+
+                    <div class="sprite-platform opponent-platform">
+                        <div
+                            id="opponent-sprite"
+                            class="monster-sprite pixel-sprite opponent-sprite"
+                            role="img"
+                            aria-label="Opponent creature"
+                        ></div>
+                    </div>
+                </section>
+
+                <!-- Player combatant -->
+                <section class="combatant combatant-player">
+                    <div class="sprite-platform player-platform">
+                        <div
+                            id="player-sprite"
+                            class="monster-sprite pixel-sprite player-sprite"
+                            role="img"
+                            aria-label="Player creature"
+                        ></div>
+                    </div>
+
+                    <article class="status-card player-status">
+                        <div class="status-heading">
+                            <div>
+                                <p class="trainer-label">
+                                    Your Creature
+                                </p>
+
+                                <h2 id="player-name">
+                                    Player Creature
+                                </h2>
+                            </div>
+
+                            <span
+                                id="player-level"
+                                class="level-label"
+                            >
+                                Lv. 1
+                            </span>
+                        </div>
+
+                        <div class="type-row">
+                            <span
+                                id="player-type"
+                                class="type-badge type-fire"
+                            >
+                                Fire
+                            </span>
+                        </div>
+
+                        <div class="hp-row">
+                            <span class="hp-label">
+                                HP
+                            </span>
+
+                            <div
+                                id="player-hp-track"
+                                class="hp-track"
+                                role="progressbar"
+                                aria-label="Player HP"
+                                aria-valuemin="0"
+                                aria-valuemax="100"
+                                aria-valuenow="100"
+                            >
+                                <div
+                                    id="player-hp-bar"
+                                    class="hp-fill hp-high"
+                                    style="width: 100%;"
+                                ></div>
+                            </div>
+                        </div>
+
+                        <p
+                            id="player-hp-text"
+                            class="hp-text"
+                        >
+                            0 / 0
+                        </p>
+                    </article>
+                </section>
+            </section>
+
+            <!-- Battle message and move menu -->
+            <section
+                class="command-panel"
+                aria-label="Battle commands"
+            >
+                <div class="message-box">
+                    <p
+                        id="battle-message"
+                        aria-live="polite"
+                    >
+                        Preparing the battle...
+                    </p>
+                </div>
 
                 <div
-                    id="player-team-slots"
-                    class="team-slots"
-                    aria-label="Player team"
-                ></div>
-            </div>
+                    id="move-grid"
+                    class="move-grid"
+                    aria-label="Available moves"
+                >
+                    <!-- Move buttons are generated by JavaScript -->
+                </div>
+            </section>
 
-            <div class="team-group team-group-opponent">
-                <span class="team-label">
-                    Opponent Team
-                </span>
+            <!-- Team status -->
+            <footer class="team-strip">
+                <div class="team-group">
+                    <span class="team-label">
+                        Your Team
+                    </span>
 
-                <div
-                    id="opponent-team-slots"
-                    class="team-slots"
-                    aria-label="Opponent team"
-                ></div>
-            </div>
-        </footer>
+                    <div
+                        id="player-team-slots"
+                        class="team-slots"
+                        aria-label="Player team"
+                    ></div>
+                </div>
+
+                <div class="team-group team-group-opponent">
+                    <span class="team-label">
+                        Opponent Team
+                    </span>
+
+                    <div
+                        id="opponent-team-slots"
+                        class="team-slots"
+                        aria-label="Opponent team"
+                    ></div>
+                </div>
+            </footer>
+        </section>
     </main>
 
     <script src="script.js"></script>
