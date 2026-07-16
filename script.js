@@ -1,16 +1,15 @@
 "use strict";
 
 /*
-    Pocket Clash - Commit 7
+    Pocket Clash - Commit 8
 
     This commit adds:
-    - Player team selection
-    - Four selectable creatures
-    - Exactly two creatures per team
-    - Independently randomized opponent team
-    - Mirror match support
-    - Separate creature instances for both teams
-    - Restart returning to team selection
+    - Dedicated victory screen
+    - Dedicated defeat screen
+    - Result team preview
+    - Play Again with the same selected team
+    - Return to team selection
+    - Battle input disabled after completion
 */
 
 /* --------------------------------------------------
@@ -149,7 +148,9 @@ class Pokemon {
             this.speed,
             this.level,
             this.spritePath,
-            this.moves.map((move) => move.clone())
+            this.moves.map((move) => {
+                return move.clone();
+            })
         );
     }
 }
@@ -196,21 +197,6 @@ function createPokemon(
 /* --------------------------------------------------
    Type Effectiveness
 -------------------------------------------------- */
-
-/*
-    Six required non-neutral relationships:
-
-    Fire -> Grass = 2
-    Grass -> Fire = 0.5
-
-    Grass -> Water = 2
-    Water -> Grass = 0.5
-
-    Water -> Fire = 2
-    Electric -> Water = 2
-
-    All unspecified matchups are neutral.
-*/
 
 const TYPE_CHART = {
     fire: {
@@ -298,14 +284,6 @@ function calculateDamage(
 /* --------------------------------------------------
    Creature Templates
 -------------------------------------------------- */
-
-/*
-    These objects act as templates.
-
-    New clones are created whenever a team is built.
-    This prevents mirror-match creatures from sharing
-    HP, PP, or fainted state.
-*/
 
 const POKEMON_DATABASE = {
     cindervex: createPokemon(
@@ -490,6 +468,11 @@ const battleInterface =
         "battle-interface"
     );
 
+const battleResultScreen =
+    document.getElementById(
+        "battle-result-screen"
+    );
+
 const creatureSelectionGrid =
     document.getElementById(
         "creature-selection-grid"
@@ -610,6 +593,41 @@ const opponentTeamSlots =
         "opponent-team-slots"
     );
 
+const battleResultPanel =
+    document.getElementById(
+        "battle-result-panel"
+    );
+
+const battleResultLabel =
+    document.getElementById(
+        "battle-result-label"
+    );
+
+const battleResultTitle =
+    document.getElementById(
+        "battle-result-title"
+    );
+
+const battleResultMessage =
+    document.getElementById(
+        "battle-result-message"
+    );
+
+const battleResultTeam =
+    document.getElementById(
+        "battle-result-team"
+    );
+
+const playAgainButton =
+    document.getElementById(
+        "play-again-button"
+    );
+
+const returnSelectionButton =
+    document.getElementById(
+        "return-selection-button"
+    );
+
 /* --------------------------------------------------
    General Helpers
 -------------------------------------------------- */
@@ -712,6 +730,48 @@ function clonePokemonById(pokemonId) {
     }
 
     return template.clone();
+}
+
+/* --------------------------------------------------
+   Screen Management
+-------------------------------------------------- */
+
+function hideAllScreens() {
+    teamSelectionScreen.classList.add(
+        "hidden"
+    );
+
+    battleInterface.classList.add(
+        "hidden"
+    );
+
+    battleResultScreen.classList.add(
+        "hidden"
+    );
+}
+
+function showTeamSelectionScreen() {
+    hideAllScreens();
+
+    teamSelectionScreen.classList.remove(
+        "hidden"
+    );
+}
+
+function showBattleInterface() {
+    hideAllScreens();
+
+    battleInterface.classList.remove(
+        "hidden"
+    );
+}
+
+function showBattleResultScreen() {
+    hideAllScreens();
+
+    battleResultScreen.classList.remove(
+        "hidden"
+    );
 }
 
 /* --------------------------------------------------
@@ -979,6 +1039,20 @@ function createOpponentTeam() {
         });
 }
 
+function prepareBattleTeams() {
+    playerTeam =
+        createPlayerTeam();
+
+    opponentTeam =
+        createOpponentTeam();
+
+    activePlayerPokemon =
+        playerTeam[0];
+
+    activeOpponentPokemon =
+        opponentTeam[0];
+}
+
 function startBattleFromSelection() {
     if (
         selectedPokemonIds.length !==
@@ -991,40 +1065,22 @@ function startBattleFromSelection() {
         return;
     }
 
-    playerTeam =
-        createPlayerTeam();
-
-    opponentTeam =
-        createOpponentTeam();
-
-    activePlayerPokemon =
-        playerTeam[0];
-
-    activeOpponentPokemon =
-        opponentTeam[0];
-
-    teamSelectionScreen.classList.add(
-        "hidden"
-    );
-
-    battleInterface.classList.remove(
-        "hidden"
-    );
-
+    prepareBattleTeams();
+    showBattleInterface();
     battleManager.startBattle();
 
     console.log(
         "Player team:",
-        playerTeam.map(
-            (pokemon) => pokemon.name
-        )
+        playerTeam.map((pokemon) => {
+            return pokemon.name;
+        })
     );
 
     console.log(
         "Opponent team:",
-        opponentTeam.map(
-            (pokemon) => pokemon.name
-        )
+        opponentTeam.map((pokemon) => {
+            return pokemon.name;
+        })
     );
 }
 
@@ -1397,6 +1453,142 @@ function renderBattleScreen() {
 }
 
 /* --------------------------------------------------
+   Result Screen Rendering
+-------------------------------------------------- */
+
+function createResultCreatureCard(pokemon) {
+    const card =
+        document.createElement("article");
+
+    card.className =
+        `result-creature-card type-border-${pokemon.type}`;
+
+    if (pokemon.isFainted) {
+        card.classList.add(
+            "result-creature-fainted"
+        );
+    }
+
+    const sprite =
+        document.createElement("div");
+
+    sprite.className =
+        "result-creature-sprite";
+
+    sprite.style.backgroundImage =
+        `url("${pokemon.spritePath}")`;
+
+    sprite.setAttribute(
+        "role",
+        "img"
+    );
+
+    sprite.setAttribute(
+        "aria-label",
+        pokemon.name
+    );
+
+    const information =
+        document.createElement("div");
+
+    information.className =
+        "result-creature-information";
+
+    const name =
+        document.createElement("h3");
+
+    name.textContent =
+        pokemon.name;
+
+    const type =
+        document.createElement("span");
+
+    type.className =
+        `type-badge type-${pokemon.type}`;
+
+    type.textContent =
+        formatTypeName(pokemon.type);
+
+    const health =
+        document.createElement("p");
+
+    health.className =
+        "result-creature-health";
+
+    health.textContent =
+        pokemon.isFainted
+            ? "Fainted"
+            : `HP ${pokemon.currentHP} / ${pokemon.maxHP}`;
+
+    information.append(
+        name,
+        type,
+        health
+    );
+
+    card.append(
+        sprite,
+        information
+    );
+
+    return card;
+}
+
+function renderResultTeam(team) {
+    battleResultTeam.innerHTML = "";
+
+    team.forEach((pokemon) => {
+        battleResultTeam.appendChild(
+            createResultCreatureCard(
+                pokemon
+            )
+        );
+    });
+}
+
+function displayBattleResult(result) {
+    const playerWon =
+        result === "victory";
+
+    battleResultPanel.classList.remove(
+        "victory-result",
+        "defeat-result"
+    );
+
+    battleResultPanel.classList.add(
+        playerWon
+            ? "victory-result"
+            : "defeat-result"
+    );
+
+    battleResultLabel.textContent =
+        "Battle Complete";
+
+    battleResultTitle.textContent =
+        playerWon
+            ? "Victory"
+            : "Defeat";
+
+    battleResultMessage.textContent =
+        playerWon
+            ? "Your team defeated every opposing creature."
+            : "Your team was defeated. Adjust your lineup and try again.";
+
+    /*
+        Victory displays the player's team.
+        Defeat displays the opponent's winning team.
+    */
+
+    renderResultTeam(
+        playerWon
+            ? playerTeam
+            : opponentTeam
+    );
+
+    showBattleResultScreen();
+}
+
+/* --------------------------------------------------
    Battle Manager
 -------------------------------------------------- */
 
@@ -1577,6 +1769,11 @@ class BattleManager {
                     return;
                 }
 
+                /*
+                    If the first attacker causes a faint,
+                    the original second action is skipped.
+                */
+
                 break;
             }
         }
@@ -1737,7 +1934,10 @@ class BattleManager {
 
         if (side === "player") {
             if (isTeamDefeated(playerTeam)) {
-                this.endBattle("defeat");
+                await this.endBattle(
+                    "defeat"
+                );
+
                 return true;
             }
 
@@ -1758,7 +1958,10 @@ class BattleManager {
             await wait(1200);
         } else {
             if (isTeamDefeated(opponentTeam)) {
-                this.endBattle("victory");
+                await this.endBattle(
+                    "victory"
+                );
+
                 return true;
             }
 
@@ -1806,14 +2009,13 @@ class BattleManager {
         );
     }
 
-    endBattle(result) {
+    async endBattle(result) {
         this.state =
             BATTLE_STATES.BATTLE_OVER;
 
         this.playerMove = null;
         this.opponentMove = null;
 
-        renderBattleScreen();
         disableMoveButtons();
 
         if (result === "victory") {
@@ -1825,6 +2027,14 @@ class BattleManager {
                 "Defeat! Your team has no creatures left."
             );
         }
+
+        await wait(1300);
+
+        displayBattleResult(result);
+
+        console.log(
+            `Battle ended with result: ${result}`
+        );
     }
 }
 
@@ -1859,8 +2069,26 @@ function handleMoveButtonClick(event) {
 }
 
 /* --------------------------------------------------
-   Restart and Initialization
+   Result Screen Actions
 -------------------------------------------------- */
+
+function playAgainWithSameTeam() {
+    if (
+        selectedPokemonIds.length !==
+        TEAM_SIZE
+    ) {
+        returnToTeamSelection();
+        return;
+    }
+
+    prepareBattleTeams();
+    showBattleInterface();
+    battleManager.startBattle();
+
+    console.log(
+        "Started another battle with the same player team."
+    );
+}
 
 function returnToTeamSelection() {
     selectedPokemonIds = [];
@@ -1873,16 +2101,10 @@ function returnToTeamSelection() {
 
     battleManager.resetToSelection();
 
-    battleInterface.classList.add(
-        "hidden"
-    );
-
-    teamSelectionScreen.classList.remove(
-        "hidden"
-    );
-
     renderCreatureSelectionGrid();
     renderSelectionState();
+
+    showTeamSelectionScreen();
 
     showSelectionMessage(
         "Choose your first creature."
@@ -1893,20 +2115,18 @@ function returnToTeamSelection() {
     );
 }
 
+/* --------------------------------------------------
+   Initialization
+-------------------------------------------------- */
+
 function initializeGame() {
     renderCreatureSelectionGrid();
     renderSelectionState();
 
-    teamSelectionScreen.classList.remove(
-        "hidden"
-    );
-
-    battleInterface.classList.add(
-        "hidden"
-    );
+    showTeamSelectionScreen();
 
     console.log(
-        "Pocket Clash team selection initialized."
+        "Pocket Clash result screens initialized."
     );
 }
 
@@ -1920,6 +2140,16 @@ startBattleButton.addEventListener(
 );
 
 restartButton.addEventListener(
+    "click",
+    returnToTeamSelection
+);
+
+playAgainButton.addEventListener(
+    "click",
+    playAgainWithSameTeam
+);
+
+returnSelectionButton.addEventListener(
     "click",
     returnToTeamSelection
 );
