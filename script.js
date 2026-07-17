@@ -1364,19 +1364,19 @@ function disableMoveButtons() {
 
 function createTeamSlot(
     pokemon,
-    activePokemon
+    activePokemon,
+    side
 ) {
     const slot =
         document.createElement("span");
 
     slot.className =
-        `team-slot type-${pokemon.type}`;
+        `team-slot ${side}-team-slot`;
 
     slot.title =
-        `${pokemon.name} ` +
-        `(${formatTypeName(
-            pokemon.type
-        )})`;
+        pokemon.isFainted
+            ? "Fainted creature"
+            : "Available creature";
 
     if (pokemon === activePokemon) {
         slot.classList.add(
@@ -1396,7 +1396,8 @@ function createTeamSlot(
 function renderTeamSlots(
     team,
     activePokemon,
-    containerElement
+    containerElement,
+    side
 ) {
     containerElement.innerHTML = "";
 
@@ -1404,7 +1405,8 @@ function renderTeamSlots(
         const slot =
             createTeamSlot(
                 pokemon,
-                activePokemon
+                activePokemon,
+                side
             );
 
         containerElement.appendChild(
@@ -1442,13 +1444,15 @@ function renderBattleScreen() {
     renderTeamSlots(
         playerTeam,
         activePlayerPokemon,
-        playerTeamSlots
+        playerTeamSlots,
+        "player"
     );
 
     renderTeamSlots(
         opponentTeam,
         activeOpponentPokemon,
-        opponentTeamSlots
+        opponentTeamSlots,
+        "opponent"
     );
 }
 
@@ -1917,17 +1921,19 @@ class BattleManager {
         );
 
         renderTeamSlots(
-            side === "player"
-                ? playerTeam
-                : opponentTeam,
+        side === "player"
+            ? playerTeam
+            : opponentTeam,
 
-            side === "player"
-                ? activePlayerPokemon
-                : activeOpponentPokemon,
+        side === "player"
+            ? activePlayerPokemon
+            : activeOpponentPokemon,
 
-            side === "player"
-                ? playerTeamSlots
-                : opponentTeamSlots
+        side === "player"
+            ? playerTeamSlots
+            : opponentTeamSlots,
+
+        side
         );
 
         await wait(1400);
