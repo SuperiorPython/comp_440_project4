@@ -32,12 +32,21 @@ const BATTLE_STATES = {
 -------------------------------------------------- */
 
 class Move {
-    constructor(name, type, power, maxPP) {
+    constructor(
+        name,
+        type,
+        power,
+        maxPP,
+        category = "damage",
+        effect = null
+    ) {
         this.name = name;
         this.type = type;
         this.power = power;
         this.maxPP = maxPP;
         this.currentPP = maxPP;
+        this.category = category;
+        this.effect = effect;
     }
 
     hasPP() {
@@ -62,7 +71,9 @@ class Move {
             this.name,
             this.type,
             this.power,
-            this.maxPP
+            this.maxPP,
+            this.category,
+            this.effect
         );
     }
 }
@@ -92,6 +103,9 @@ class Pokemon {
         this.spritePath = spritePath;
         this.moves = moves;
         this.isFainted = false;
+        this.attackModifier = 1;
+        this.defenseModifier = 1;
+        this.speedModifier = 1;
     }
 
     getHPPercentage() {
@@ -131,6 +145,9 @@ class Pokemon {
     reset() {
         this.currentHP = this.maxHP;
         this.isFainted = false;
+        this.attackModifier = 1;
+        this.defenseModifier = 1;
+        this.speedModifier = 1;
 
         this.moves.forEach((move) => {
             move.resetPP();
@@ -159,12 +176,21 @@ class Pokemon {
    Factories
 -------------------------------------------------- */
 
-function createMove(name, type, power, maxPP) {
+function createMove(
+    name,
+    type,
+    power,
+    maxPP,
+    category = "damage",
+    effect = null
+) {
     return new Move(
         name,
         type,
         power,
-        maxPP
+        maxPP,
+        category,
+        effect
     );
 }
 
@@ -253,9 +279,17 @@ function calculateDamage(
     const levelModifier =
         (attacker.level + 10) / 40;
 
+    const modifiedAttack =
+        attacker.attack *
+        attacker.attackModifier;
+
+    const modifiedDefense =
+        defender.defense *
+        defender.defenseModifier;
+
     const attackDefenseRatio =
-        attacker.attack /
-        Math.max(1, defender.defense);
+        modifiedAttack /
+        Math.max(1, modifiedDefense);
 
     const baseDamage =
         move.power *
@@ -279,6 +313,47 @@ function calculateDamage(
         damage: finalDamage,
         typeMultiplier
     };
+}
+
+function applyMoveEffect(
+    attacker,
+    defender,
+    effect
+) {
+    switch (effect) {
+        case "attack-up":
+            attacker.attackModifier *= 1.25;
+
+            return `${attacker.name}'s Attack rose!`;
+
+        case "defense-up":
+            attacker.defenseModifier *= 1.25;
+
+            return `${attacker.name}'s Defense rose!`;
+
+        case "speed-up":
+            attacker.speedModifier *= 1.25;
+
+            return `${attacker.name}'s Speed rose!`;
+
+        case "attack-down":
+            defender.attackModifier *= 0.8;
+
+            return `${defender.name}'s Attack fell!`;
+
+        case "defense-down":
+            defender.defenseModifier *= 0.8;
+
+            return `${defender.name}'s Defense fell!`;
+
+        case "speed-down":
+            defender.speedModifier *= 0.8;
+
+            return `${defender.name}'s Speed fell!`;
+
+        default:
+            return "But nothing happened.";
+    }
 }
 
 /* --------------------------------------------------
@@ -316,10 +391,12 @@ const POKEMON_DATABASE = {
                 8
             ),
             createMove(
-                "Inferno Rush",
+                "Battle Cry",
                 "fire",
-                60,
-                5
+                0,
+                10,
+                "status",
+                "attack-up"
             )
         ]
     ),
@@ -354,10 +431,12 @@ const POKEMON_DATABASE = {
                 18
             ),
             createMove(
-                "Ocean Crash",
+                "Aqua Shield",
                 "water",
-                58,
-                5
+                0,
+                10,
+                "status",
+                "defense-up"
             )
         ]
     ),
@@ -392,10 +471,12 @@ const POKEMON_DATABASE = {
                 16
             ),
             createMove(
-                "Forest Crush",
+                "Growth",
                 "grass",
-                56,
-                5
+                0,
+                10,
+                "status",
+                "attack-up"
             )
         ]
     ),
@@ -430,10 +511,12 @@ const POKEMON_DATABASE = {
                 8
             ),
             createMove(
-                "Thunder Dive",
+                "Agility",
                 "electric",
-                58,
-                5
+                0,
+                10,
+                "status",
+                "speed-up"
             )
         ]
     )
@@ -1310,9 +1393,14 @@ function createMoveButton(
     moveDetails.className =
         "move-details";
 
+    const moveCategoryText =
+        move.category === "status"
+            ? "Status"
+            : `Power ${move.power}`;
+
     moveDetails.textContent =
         `${formatTypeName(move.type)} | ` +
-        `Power ${move.power} | ` +
+        `${moveCategoryText} | ` +
         `PP ${move.currentPP} / ` +
         `${move.maxPP}`;
 
@@ -1790,10 +1878,12 @@ class BattleManager {
         opponentAction
     ) {
         const playerSpeed =
-            playerAction.attacker.speed;
+            playerAction.attacker.speed *
+            playerAction.attacker.speedModifier;
 
         const opponentSpeed =
-            opponentAction.attacker.speed;
+            opponentAction.attacker.speed *
+            opponentAction.attacker.speedModifier;
 
         if (playerSpeed > opponentSpeed) {
             return [
@@ -1848,6 +1938,40 @@ class BattleManager {
 
         await wait(700);
 
+        if (move.category === "status") {
+            const effectMessage =
+                applyMoveEffect(
+                    attacker,
+                    defender,
+                    move.effect
+                );
+
+            renderMoveButtons(
+                activePlayerPokemon
+            );
+
+            showBattleMessage(
+                effectMessage
+            );
+
+            console.log({
+                turn: this.turnNumber,
+                attacker: attacker.name,
+                move: move.name,
+                category: move.category,
+                effect: move.effect,
+                attackModifier:
+                    attacker.attackModifier,
+                defenseModifier:
+                    attacker.defenseModifier,
+                speedModifier:
+                    attacker.speedModifier
+            });
+
+            await wait(1200);
+            return;
+        }
+
         const result =
             calculateDamage(
                 attacker,
@@ -1897,7 +2021,9 @@ class BattleManager {
             turn: this.turnNumber,
             attacker: attacker.name,
             defender: defender.name,
-            attackerSpeed: attacker.speed,
+            attackerSpeed:
+                attacker.speed *
+                attacker.speedModifier,
             move: move.name,
             power: move.power,
             multiplier:
