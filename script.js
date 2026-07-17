@@ -6,7 +6,7 @@
     This commit adds:
     - Dedicated victory screen
     - Dedicated defeat screen
-    - Result team preview
+    - Result team details
     - Play Again with the same selected team
     - Return to team selection
     - Battle input disabled after completion
